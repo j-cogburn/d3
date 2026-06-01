@@ -6,7 +6,7 @@ A complete Claude Code workflow system for shipping software with AI agents. Dro
 
 ## What's in here
 
-**Commands** (`.claude/commands/`) — the D3 cycle as slash commands:
+**`src/commands/`** — the D3 cycle as slash commands (installed to `.claude/commands/d3/`):
 
 | Command | Purpose |
 |---|---|
@@ -17,11 +17,11 @@ A complete Claude Code workflow system for shipping software with AI agents. Dro
 | `/status` | One-screen project health snapshot |
 | `/resolve <description>` | Instant one-shot fix cycle |
 | `/improve [ux\|design\|code]` | Quality-only audit + fix cycle |
-| `/directive`, `/task` | Add work items to TASKS.md |
+| `/directive`, `/task` | Add work items to `.d3/TASKS.md` |
 | `/release [version]` | Tag and ship a production release |
 | `/sync-docs` | Update all docs to reflect what shipped |
 
-**Hooks** (`.claude/hooks/`) — enforcement layer:
+**`src/hooks/`** — enforcement layer (installed to `.d3/hooks/`):
 
 | Hook | Trigger | What it does |
 |---|---|---|
@@ -30,9 +30,15 @@ A complete Claude Code workflow system for shipping software with AI agents. Dro
 | `express-test.sh` | Edit/Write to `api-express/` | Jest/Vitest gate — exit 2 blocks on failure |
 | `python-test.sh` | Edit/Write to `api-python/` | pytest gate — exit 2 blocks on failure |
 
-**Orchestrator** (`scripts/orchestrate.js`) — context-window-safe batch execution for large sprints. Runs one `claude` process per directive in isolated git worktrees with configurable concurrency.
+**`src/scripts/orchestrate.js`** — context-window-safe batch execution for large sprints (installed to `.d3/scripts/`). Runs one `claude` process per directive in isolated git worktrees with configurable concurrency.
 
-**CI** (`.github/workflows/claude-review.yml`) — adversarial code review on every PR via Claude Code.
+**`src/WORKFLOW.md`** — the complete D3 operating manual (installed to `.d3/WORKFLOW.md`).
+
+**`bin/d3.js`** — the installer CLI: `d3 init` and `d3 update`.
+
+**`templates/`** — blank starters for `TASKS.md`, `CHANGELOG.md`, and `CLAUDE.md`.
+
+**`.github/workflows/claude-review.yml`** — adversarial code review on every PR via Claude Code.
 
 ---
 
@@ -55,26 +61,21 @@ Most teams stop at layer 2–3. This repo gives you the full stack.
 - [GitHub CLI](https://cli.github.com/) — `gh auth login`
 - Git
 
-### 2. Clone and wire up
+### 2. Install
+
+Run this in your project root:
 
 ```bash
-# Clone into your project
-git clone https://github.com/j-cogburn/d3 .d3-bootstrap
-cp -r .d3-bootstrap/.claude .
-cp -r .d3-bootstrap/.github .
-cp -r .d3-bootstrap/scripts .
-cp .d3-bootstrap/WORKFLOW.md .
-cp .d3-bootstrap/TASKS.md .
-cp .d3-bootstrap/CHANGELOG.md .
-mkdir -p docs/current reports
-rm -rf .d3-bootstrap
+npx github:j-cogburn/d3 init
 ```
 
-Or start a brand-new project from this repo as a template:
+This installs D3 without touching any existing files — it creates `.d3/`, drops commands into `.claude/commands/d3/`, and merges D3 hooks into `.claude/settings.json`.
+
+To pin a version for your team:
 
 ```bash
-gh repo create my-project --template j-cogburn/d3 --private --clone
-cd my-project
+npm install --save-dev github:j-cogburn/d3#v1.0.0
+npx d3 init
 ```
 
 ### 3. Fill in CLAUDE.md
@@ -83,7 +84,7 @@ Edit `CLAUDE.md` to describe your project, services, and dev commands. This is t
 
 ### 4. Adapt the hooks
 
-Edit `.claude/hooks/client-lint.sh`, `express-test.sh`, and `python-test.sh` to match your service directories and test commands. Each hook follows the same pattern:
+Edit `.d3/hooks/client-lint.sh`, `express-test.sh`, and `python-test.sh` to match your service directories and test commands. Each hook follows the same pattern:
 
 ```bash
 # 1. Read the edited file path from stdin
@@ -116,6 +117,16 @@ You should see the session context block (branch, directive count, last audit). 
 /execute       # ship your first batch
 ```
 
+### Updating
+
+When D3 ships improvements to commands or hooks, pull them in with:
+
+```bash
+npx github:j-cogburn/d3 update
+```
+
+This overwrites only D3-owned files — your `TASKS.md`, `CHANGELOG.md`, `docs/`, and customized hooks content are never touched.
+
 ---
 
 ## Adapting for your stack
@@ -124,9 +135,9 @@ The hook scripts are named after common stacks but the paths are fully configura
 
 | You have | Edit this file | Change this |
 |---|---|---|
-| React/Vite frontend | `client-lint.sh` | `client/` path and `npm run lint --prefix client` |
-| Node.js API | `express-test.sh` | `api-express/` path and `npm test --prefix api-express` |
-| Python API | `python-test.sh` | `api-python/` path and `.venv/bin/pytest api-python/tests/` |
+| React/Vite frontend | `.d3/hooks/client-lint.sh` | `client/` path and `npm run lint --prefix client` |
+| Node.js API | `.d3/hooks/express-test.sh` | `api-express/` path and `npm test --prefix api-express` |
+| Python API | `.d3/hooks/python-test.sh` | `api-python/` path and `.venv/bin/pytest api-python/tests/` |
 | Something else | Copy any hook as a template | Adjust the path check and test command |
 
 Hooks that don't match any files in your project are silent no-ops — safe to leave as-is.
@@ -140,16 +151,16 @@ When you have 20+ ready directives, `/execute` automatically delegates to the sc
 ```bash
 npm run orchestrate           # all ready directives
 npm run orchestrate:dry       # preview without executing
-node scripts/orchestrate.js DIRECTIVE-055    # one directive
-D3_CONCURRENCY=6 npm run orchestrate         # override concurrency (default 4)
+node .d3/scripts/orchestrate.js DIRECTIVE-055    # one directive
+D3_CONCURRENCY=6 npm run orchestrate             # override concurrency (default 4)
 ```
 
 Add to your `package.json`:
 ```json
 {
   "scripts": {
-    "orchestrate": "node scripts/orchestrate.js",
-    "orchestrate:dry": "node scripts/orchestrate.js --dry-run"
+    "orchestrate": "node .d3/scripts/orchestrate.js",
+    "orchestrate:dry": "node .d3/scripts/orchestrate.js --dry-run"
   }
 }
 ```
@@ -169,4 +180,4 @@ Docs stay fresh automatically. Manage schedules with `/schedule list`.
 
 ## Full reference
 
-See [WORKFLOW.md](WORKFLOW.md) for the complete operating manual: command reference, directive lifecycle, audit dimensions, design principles, and the industry benchmark assessment.
+See [WORKFLOW.md](.d3/WORKFLOW.md) for the complete operating manual: command reference, directive lifecycle, audit dimensions, design principles, and the industry benchmark assessment.
