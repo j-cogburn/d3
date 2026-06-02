@@ -21,24 +21,24 @@ If `$ARGUMENTS` provides a hint, use it to narrow focus further.
 
 ## Step 2 — Update as-built docs
 
-For each area that changed, update the corresponding doc in `docs/current/`:
+For each area that changed, update the corresponding doc in `.d3/docs/current/`:
 
 **If Express code changed** (`api-express/src/`):
-- Read `docs/current/express-api.md`
+- Read `.d3/docs/current/express-api.md`
 - Update: endpoint tables, model schemas, controller descriptions, env vars, known issues
 - Check: are any new routes, models, or controllers missing from the doc?
 
 **If Python code changed** (`api-python/src/`):
-- Read `docs/current/python-api.md`
+- Read `.d3/docs/current/python-api.md`
 - Update: endpoint table, boot sequence, CLI tools, signal dimensions, known issues
 
 **If React code changed** (`client/src/`):
-- Read `docs/current/frontend.md`
+- Read `.d3/docs/current/frontend.md`
 - Update: route table (with live/mock status), page inventory, component descriptions, known issues
 - Verify the page count is still correct
 
 **If data pipeline changed** (fetcher, ingestion, schema):
-- Read `docs/current/data-platform.md`
+- Read `.d3/docs/current/data-platform.md`
 - Update storage layouts, table schemas, source descriptions
 
 **Rule:** document what IS, not what was planned. If something is built-but-not-wired, say so explicitly. Never leave a section describing a previous state.
@@ -72,10 +72,10 @@ Check the Implementation Status table. Flip any ✅/⚠️/⏳ that changed. Add
 ## Step 5 — Check design and roadmap docs
 
 If any UI changes shipped:
-- Read `docs/design/information-architecture.md` — any new routes to add? Any status markers to update?
+- Read `.d3/docs/design/information-architecture.md` — any new routes to add? Any status markers to update?
 
 If any roadmap items completed:
-- No changes to `docs/roadmap/` — those are forward-looking and should not be retroactively updated to describe past work. CHANGELOG.md is the record of what shipped.
+- No changes to `.d3/docs/roadmap/` — those are forward-looking and should not be retroactively updated to describe past work. CHANGELOG.md is the record of what shipped.
 
 ---
 
@@ -95,11 +95,11 @@ Read back each file you edited. Check:
 DOCS SYNCED
 ============
 Files updated:
-  docs/current/express-api.md  — [what changed]
+  .d3/docs/current/express-api.md  — [what changed]
   client/CLAUDE.md             — [what changed]
   ...
 
 Files unchanged (not affected by recent commits):
-  docs/current/python-api.md
+  .d3/docs/current/python-api.md
   ...
 ```
