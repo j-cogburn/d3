@@ -44,6 +44,7 @@ The directive to add is: $ARGUMENTS
 **Agent:** <agent-type>
 **Services:** <services>
 **Skills:** <comma-separated skill names — omit line if none apply>
+**Spec:** <.d3/docs/specs/spec-TIMESTAMP-slug.md — omit if not derived from a spec>
 **Added:** YYYY-MM-DD
 
 <description as a clear imperative — what to do and why it matters.>
@@ -51,8 +52,8 @@ The directive to add is: $ARGUMENTS
 **Done when:**
 - [ ] <primary success criterion derived from the description>
 - [ ] <test gate: include one per service in scope>
-  - Express: `npm test --prefix api-express` passes
-  - Python: `api-python/.venv/bin/pytest api-python/tests/ -q` passes
+  - Express: `npm test --prefix api-express -- --coverage` passes with ≥70% line coverage (or project threshold)
+  - Python: `api-python/.venv/bin/pytest api-python/tests/ -q --cov --cov-fail-under=70` passes
   - React: `npm run build --prefix client` succeeds
 
 ---

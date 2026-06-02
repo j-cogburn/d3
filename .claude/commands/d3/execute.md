@@ -23,7 +23,7 @@ Read `.d3/TASKS.md`. If `$ARGUMENTS` is a directive ID (e.g. `DIRECTIVE-055`), t
 
 Skip any directive whose status contains `in-progress`, `complete`, or `blocked`.
 
-For each directive extract: ID, Title, Description, Done-when items, Agent type (default `general-purpose`), Services, Skills (optional — comma-separated skill names from the `**Skills:**` field if present).
+For each directive extract: ID, Title, Description, Done-when items, Agent type (default `general-purpose`), Services, Skills (from `**Skills:**` field), Spec (from `**Spec:**` field if present).
 
 If zero targets found, report and stop.
 
@@ -47,9 +47,28 @@ Slug = title lowercased, spaces → hyphens, max 5 words, strip punctuation.
 
 ---
 
-## Step 4 — Present plan and confirm
+## Step 4 — Conflict analysis and confirm
 
-Print:
+**Conflict analysis (before presenting):**
+
+Scan all target directives for potential conceptual conflicts. Two directives conflict if they:
+- Mention the same files, models, components, or API endpoints in their descriptions
+- Both modify the same service's authentication, data schema, or core business logic
+- One creates something the other modifies or deletes
+
+For each conflict found, print a warning:
+```
+⚠ Conflict detected:
+  DIRECTIVE-NNN and DIRECTIVE-NNN both touch <shared concern>
+  Running in parallel risks incompatible design decisions.
+```
+
+Then ask (single-select):
+- "Run in parallel — I accept the risk"
+- "Run conflicting pairs sequentially, others in parallel"
+- "Review conflicts manually before proceeding"
+
+**Present plan:**
 ```
 DIRECTIVES TO EXECUTE
 ======================
@@ -57,11 +76,13 @@ DIRECTIVE-NNN  <Title>
   Branch:   feature/...
   Agent:    <type>
   Services: <list>
+  Spec:     <spec path if present>
 ...
 Total: N directive(s)
+Conflicts: N pairs flagged
 ```
 
-Ask to proceed or cancel (single-select). If cancelled, stop.
+Ask to proceed or cancel. If cancelled, stop.
 
 ---
 

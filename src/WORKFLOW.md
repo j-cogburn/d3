@@ -128,6 +128,7 @@ This means agent briefs are always current — they reflect the actual codebase 
 | `.d3/wireframes/` | ASCII wireframes output by `/wireframe`. Naming: `<slug>-YYYY-MM-DD-HHMM.md`. Feed into `/plan` to create implementation directives. |
 | `.d3/vision.md` | **Project vision — single source of strategic truth.** Defined by `/vision`. Read by every agent brief, `/plan`, `/audit vision`, `/objective`, and `/spec`. Contains: vision sentence, users + JTBD, success horizon, strategic bets, anti-goals, decision principles. |
 | `.d3/objectives/` | Objective files output by `/objective`. Naming: `obj-NNN-<slug>-TIMESTAMP.md`. Track goal → approach → progress → directives spawned. |
+| `.d3/docs/adr/` | Architecture Decision Records. Created by agents during `/execute` when significant architectural decisions are made. Naming: `adr-NNN-title.md`. |
 
 ---
 

@@ -31,7 +31,7 @@ ls -t .d3/reports/*.md 2>/dev/null | head -1
 ```
 Read the most recent report.
 
-**If `$ARGUMENTS` is a file path** (with optional section), resolve globs: `ls -t <glob> | head -1`. Read the file, then focus on the specified section if given.
+**If `$ARGUMENTS` is a file path** (with optional section), resolve globs: `ls -t <glob> | head -1`. Read the file, then focus on the specified section if given. Record the resolved path — populate the `**Spec:**` field in all directives created from this source.
 
 **If `$ARGUMENTS` is inline text**, treat it directly as source material.
 
@@ -109,6 +109,7 @@ For each selected proposal, insert immediately after the DIRECTIVES section head
 **Agent:** <type>
 **Services:** <services>
 **Skills:** <comma-separated skill names — omit line if none apply>
+**Spec:** <source spec path — populate when directive is derived from a spec file>
 **Added:** YYYY-MM-DD
 
 <Description>

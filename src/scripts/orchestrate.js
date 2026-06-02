@@ -4,14 +4,15 @@
  *
  * Runs ready directives outside Claude's context window, eliminating context
  * accumulation for large sprints. Each directive gets an isolated git worktree
- * and a dedicated `claude --print` process. Results are written to TASKS.md
- * and CHANGELOG.md incrementally as each agent completes.
+ * and a dedicated `claude --print` process. Adversarial review runs inside each
+ * worker task and gates completion — critical findings move the directive to
+ * `needs-review` rather than `complete`.
  *
  * Usage:
- *   node scripts/orchestrate.js                  # all ready directives
- *   node scripts/orchestrate.js DIRECTIVE-055    # single directive
- *   node scripts/orchestrate.js --dry-run        # preview without executing
- *   D3_CONCURRENCY=6 node scripts/orchestrate.js # override concurrency
+ *   node .d3/scripts/orchestrate.js                  # all ready directives
+ *   node .d3/scripts/orchestrate.js DIRECTIVE-055    # single directive
+ *   node .d3/scripts/orchestrate.js --dry-run        # preview without executing
+ *   D3_CONCURRENCY=6 node .d3/scripts/orchestrate.js # override concurrency
  *
  * Requirements:
  *   - `claude` CLI in PATH, authenticated
@@ -25,16 +26,29 @@ const { spawn, spawnSync, execSync } = require('child_process');
 const fs   = require('fs');
 const path = require('path');
 
-const ROOT          = path.resolve(__dirname, '..');
-const TASKS_PATH    = path.join(ROOT, 'TASKS.md');
-const CHANGELOG_PATH = path.join(ROOT, 'CHANGELOG.md');
-const WORKTREES_DIR = path.join(ROOT, '.claude', 'worktrees');
+const ROOT           = path.resolve(__dirname, '../..');
+const D3_DIR         = path.join(ROOT, '.d3');
+const TASKS_PATH     = path.join(D3_DIR, 'TASKS.md');
+const CHANGELOG_PATH = path.join(D3_DIR, 'CHANGELOG.md');
+const VISION_PATH    = path.join(D3_DIR, 'vision.md');
+const WORKTREES_DIR  = path.join(D3_DIR, 'worktrees');
 const MAX_CONCURRENT = parseInt(process.env.D3_CONCURRENCY || '4', 10);
 const TIMEOUT_MS     = parseInt(process.env.D3_TIMEOUT_MS  || String(15 * 60 * 1000), 10);
 
 const args    = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
 const TARGET  = args.find(a => /^DIRECTIVE-\d+$/i.test(a));
+
+// Patterns that indicate critical findings in a code review
+const CRITICAL_PATTERNS = [
+  /\bCritical\b/i,
+  /\bsecurity\s+(?:vulnerability|issue|bug|flaw)\b/i,
+  /\bSQL\s+injection\b/i,
+  /\bXSS\b/,
+  /\bbreaking\s+change\b/i,
+  /\bremote\s+code\s+execution\b/i,
+  /🚨/,
+];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -57,6 +71,10 @@ function branchFor(directive) {
   return `feature/${directive.id.toLowerCase()}-${slug}`;
 }
 
+function hasCriticalFindings(reviewOutput) {
+  return CRITICAL_PATTERNS.some(p => p.test(reviewOutput));
+}
+
 // ── TASKS.md parser ───────────────────────────────────────────────────────────
 
 function parseReadyDirectives(content) {
@@ -73,8 +91,10 @@ function parseReadyDirectives(content) {
     out.push({
       id,
       title:       title.trim(),
-      agent:       (body.match(/\*\*Agent:\*\*\s*(.+)/)   || [])[1]?.trim() ?? 'general-purpose',
-      services:    (body.match(/\*\*Services:\*\*\s*(.+)/) || [])[1]?.trim() ?? '',
+      agent:       (body.match(/\*\*Agent:\*\*\s*(.+)/)    || [])[1]?.trim() ?? 'general-purpose',
+      services:    (body.match(/\*\*Services:\*\*\s*(.+)/)  || [])[1]?.trim() ?? '',
+      skills:      (body.match(/\*\*Skills:\*\*\s*(.+)/)    || [])[1]?.trim() ?? '',
+      spec:        (body.match(/\*\*Spec:\*\*\s*(.+)/)      || [])[1]?.trim() ?? '',
       description: (body.match(/\*\*Added:\*\*[^\n]*\n\n([\s\S]*?)\n\*\*Done when/)  || [])[1]?.trim() ?? '',
       doneWhen:    (body.match(/\*\*Done when:\*\*\n([\s\S]*?)(?:\n---|$)/) || [])[1]?.trim() ?? '',
     });
@@ -103,13 +123,44 @@ function readServiceContext(services) {
     .join('\n\n---\n\n');
 }
 
+function readVisionContext() {
+  if (!fs.existsSync(VISION_PATH)) return null;
+  const content = fs.readFileSync(VISION_PATH, 'utf8');
+  // Extract vision sentence, anti-goals, and decision principles
+  const vision     = content.match(/^## Vision\n([^\n#]+)/m)?.[1]?.trim();
+  const antiGoals  = content.match(/## Anti-goals\n([\s\S]*?)(?=\n##|$)/)?.[1]?.trim();
+  const principles = content.match(/## Decision principles\n([\s\S]*?)(?=\n##|$)/)?.[1]?.trim();
+  if (!vision) return null;
+  const parts = [`**Vision:** ${vision}`];
+  if (antiGoals)  parts.push(`**Anti-goals:**\n${antiGoals}`);
+  if (principles) parts.push(`**Decision principles:**\n${principles}`);
+  return parts.join('\n\n');
+}
+
+function readSpecContext(specPath) {
+  if (!specPath) return null;
+  const full = path.join(ROOT, specPath);
+  if (!fs.existsSync(full)) return null;
+  return `### Spec: ${specPath}\n${fs.readFileSync(full, 'utf8')}`;
+}
+
 function buildBrief(directive) {
   const branch         = branchFor(directive);
   const rootContext    = fs.existsSync(path.join(ROOT, 'CLAUDE.md'))
                           ? fs.readFileSync(path.join(ROOT, 'CLAUDE.md'), 'utf8') : '';
   const serviceContext = readServiceContext(directive.services);
+  const visionContext  = readVisionContext();
+  const specContext    = readSpecContext(directive.spec);
 
-  return [
+  const skillsSection = directive.skills
+    ? directive.skills.split(',').map(s => s.trim()).filter(Boolean).map(skill => {
+        const skillPath = path.join(D3_DIR, 'skills', skill, 'SKILL.md');
+        if (!fs.existsSync(skillPath)) return null;
+        return `### Skill: ${skill}\n${fs.readFileSync(skillPath, 'utf8')}`;
+      }).filter(Boolean).join('\n\n---\n\n')
+    : null;
+
+  const sections = [
     '## Identity',
     '| Field         | Value |',
     '|---------------|-------|',
@@ -119,6 +170,13 @@ function buildBrief(directive) {
     `| Services      | ${directive.services} |`,
     '| Parallel-safe | yes |',
     '',
+  ];
+
+  if (visionContext) {
+    sections.push('## Project vision', visionContext, '');
+  }
+
+  sections.push(
     '## What to build',
     directive.description,
     '',
@@ -126,9 +184,24 @@ function buildBrief(directive) {
     directive.doneWhen,
     '',
     '## Out of scope',
-    '- Do not edit TASKS.md, TASK.template.md, or any .claude/ file',
+    '- Do not edit `.d3/TASKS.md`, TASK.template.md, or any .claude/ file',
     '- Do not modify other directives or tasks',
+    visionContext ? '- Do not build features that conflict with the project anti-goals listed above' : '',
     '',
+    '## Files to create / edit',
+    '(infer specific paths from description and services)',
+    '',
+  );
+
+  if (specContext) {
+    sections.push('## Spec', specContext, '');
+  }
+
+  if (skillsSection) {
+    sections.push('## Skills', skillsSection, '');
+  }
+
+  sections.push(
     '## Reference patterns',
     serviceContext || '(No service context — infer from project CLAUDE.md below.)',
     '',
@@ -139,8 +212,11 @@ function buildBrief(directive) {
     '- All checklist items complete',
     '- No console.log / print debug statements in production paths',
     '- No hardcoded secrets, URLs, or credentials',
+    '- If architectural decisions were made, create an ADR in `.d3/docs/adr/`',
     `- Open a PR against main — title must be: ${directive.id}: ${directive.title}`,
-  ].join('\n');
+  );
+
+  return sections.filter(s => s !== '').join('\n');
 }
 
 // ── Worktree management ───────────────────────────────────────────────────────
@@ -151,7 +227,6 @@ function createWorktree(branch) {
   try {
     run(`git worktree add "${dest}" -b "${branch}"`);
   } catch {
-    // Branch already exists — attach to it
     run(`git worktree add "${dest}" "${branch}"`);
   }
   return dest;
@@ -162,15 +237,16 @@ function removeWorktree(dest) {
   try { run('git worktree prune'); } catch {}
 }
 
-// ── Agent runner ──────────────────────────────────────────────────────────────
+// ── Agent + review runners ────────────────────────────────────────────────────
 
-function reviewPR(pr, worktreePath) {
+function reviewPR(worktreePath) {
   const result = spawnSync(
     'claude',
     ['-p', '/code-review medium --comment', '--dangerously-skip-permissions'],
     { cwd: worktreePath, encoding: 'utf8', timeout: 5 * 60 * 1000, env: { ...process.env } }
   );
-  return (result.stdout || '').trim() || (result.stderr ? `(stderr: ${result.stderr.slice(0, 300)})` : '(no output)');
+  const output = (result.stdout || '').trim() || (result.stderr ? `(stderr: ${result.stderr.slice(0, 300)})` : '(no output)');
+  return { output, critical: hasCriticalFindings(output) };
 }
 
 function runAgent(directive, worktreePath) {
@@ -179,7 +255,6 @@ function runAgent(directive, worktreePath) {
     const stdout = [];
     const stderr = [];
 
-    // Pass brief as -p argument — avoids stdin piping uncertainty for long prompts
     const proc = spawn('claude', ['-p', brief, '--dangerously-skip-permissions'], {
       cwd:   worktreePath,
       env:   { ...process.env },
@@ -253,7 +328,6 @@ async function pool(fns, limit) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
-  // Preflight checks
   try { run('which claude'); } catch { die('`claude` not found in PATH — install with: npm install -g @anthropic-ai/claude-code'); }
   try { run('which gh');     } catch { die('`gh` not found in PATH — install GitHub CLI'); }
 
@@ -264,7 +338,6 @@ async function main() {
     process.exit(0);
   }
 
-  // Header
   console.log('\nD3 ORCHESTRATOR');
   console.log('================');
   console.log(`Directives: ${directives.length}  |  Concurrency: ${MAX_CONCURRENT}  |  Timeout: ${TIMEOUT_MS / 60000}m  |  Dry-run: ${DRY_RUN}`);
@@ -272,12 +345,13 @@ async function main() {
   for (const d of directives) {
     console.log(`  ${d.id}  ${d.title}`);
     console.log(`    Agent: ${d.agent}  |  Services: ${d.services || 'unspecified'}`);
+    if (d.skills)  console.log(`    Skills: ${d.skills}`);
+    if (d.spec)    console.log(`    Spec: ${d.spec}`);
     console.log(`    Branch: ${branchFor(d)}`);
   }
 
   if (DRY_RUN) { console.log('\nDry run — nothing executed.'); process.exit(0); }
 
-  // Mark all in-progress upfront
   for (const d of directives) {
     updateTasksStatus(d.id, `in-progress — branch: ${branchFor(d)}`);
   }
@@ -296,13 +370,26 @@ async function main() {
       const result = await runAgent(directive, worktree);
 
       if (result.ok && result.pr) {
-        console.log(`[${directive.id}] ✓  PR #${result.pr}`);
-        updateTasksStatus(directive.id, `complete — PR #${result.pr} · ${today()}`);
-        appendChangelog(directive, result.pr);
-        return { ...result, worktree }; // Keep worktree alive for adversarial review
+        // ── Adversarial review gates completion ──────────────────────────────
+        console.log(`[${directive.id}] PR #${result.pr} — running adversarial review...`);
+        const { output: reviewOutput, critical } = reviewPR(worktree);
+
+        if (critical) {
+          console.log(`[${directive.id}] ⚠  Critical findings — flagged for manual review (PR #${result.pr})`);
+          console.log(`[${directive.id}]    Review output:\n${reviewOutput.slice(0, 500)}`);
+          updateTasksStatus(directive.id, `needs-review — PR #${result.pr} · ${today()}`);
+          // Not added to changelog until human reviews and merges
+        } else {
+          console.log(`[${directive.id}] ✓  PR #${result.pr} — review clean`);
+          updateTasksStatus(directive.id, `complete — PR #${result.pr} · ${today()}`);
+          appendChangelog(directive, result.pr);
+        }
+
+        removeWorktree(worktree);
+        return { ...result, reviewOutput, critical, worktree: null };
       } else {
         console.log(`[${directive.id}] ✗  ${result.reason}${result.pr ? '' : ' (no PR detected)'}`);
-        updateTasksStatus(directive.id, 'ready'); // Revert so it can be re-run
+        updateTasksStatus(directive.id, 'ready');
         removeWorktree(worktree);
         return { ...result, worktree: null };
       }
@@ -315,35 +402,24 @@ async function main() {
 
   const results = await pool(tasks, MAX_CONCURRENT);
 
-  // ── Adversarial review ──────────────────────────────────────────────────────
-  const reviewable = results.filter(r => r.ok && r.pr && r.worktree);
-  if (reviewable.length > 0) {
-    console.log(`\nADVERSARIAL REVIEW — ${reviewable.length} PR${reviewable.length > 1 ? 's' : ''}`);
-    console.log('='.repeat(40));
-    for (const r of reviewable) {
-      console.log(`\n[${r.directive.id}] Reviewing PR #${r.pr}...`);
-      console.log(reviewPR(r.pr, r.worktree));
-    }
-  }
-
-  // ── Clean up remaining worktrees ────────────────────────────────────────────
-  for (const r of results) {
-    if (r.worktree) removeWorktree(r.worktree);
-  }
-
-  const passed = results.filter(r => r.ok && r.pr);
-  const failed = results.filter(r => !r.ok || !r.pr);
+  const passed      = results.filter(r => r.ok && r.pr && !r.critical);
+  const flagged     = results.filter(r => r.ok && r.pr && r.critical);
+  const failed      = results.filter(r => !r.ok || !r.pr);
 
   console.log('\nORCHESTRATION COMPLETE');
   console.log('======================');
-  console.log(`Directives run:   ${results.length}`);
-  console.log(`PRs opened:       ${passed.length}`);
-  console.log(`PRs reviewed:     ${reviewable.length}`);
-  console.log(`Failed / no PR:   ${failed.length}`);
+  console.log(`Directives run:     ${results.length}`);
+  console.log(`PRs merged (ready): ${passed.length}`);
+  console.log(`Needs review:       ${flagged.length}`);
+  console.log(`Failed / no PR:     ${failed.length}`);
 
   if (passed.length > 0) {
-    console.log('\nSucceeded:');
+    console.log('\nSucceeded (adversarial review clean):');
     for (const r of passed) console.log(`  ${r.directive.id} — ${r.directive.title}  (PR #${r.pr})`);
+  }
+  if (flagged.length > 0) {
+    console.log('\nNeeds manual review (critical findings):');
+    for (const r of flagged) console.log(`  ${r.directive.id} — ${r.directive.title}  (PR #${r.pr})`);
   }
   if (failed.length > 0) {
     console.log('\nFailed (review manually):');

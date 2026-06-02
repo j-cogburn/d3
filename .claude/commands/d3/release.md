@@ -49,6 +49,14 @@ curl -sf -o /dev/null -w "%{http_code}" <CLIENT_STAGING_URL>
 
 Smoke-test staging with Playwright: landing page and login render without errors, no console errors.
 
+Run Lighthouse against staging to catch performance regressions before tagging production:
+```bash
+npx --prefix /tmp/lhci lighthouse <CLIENT_STAGING_URL> \
+  --chrome-flags="--headless --no-sandbox" \
+  --output=json --output-path=/tmp/lh-staging.json 2>/dev/null
+```
+Compare against `.d3/reports/performance-baseline.json`. If any Core Web Vitals metric has regressed by more than 10%, stop and report.
+
 If any check fails, stop: "Fix staging before tagging production."
 
 ---

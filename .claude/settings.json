@@ -34,7 +34,25 @@
         "hooks": [
           {
             "type": "command",
+            "command": "bash src/hooks/express-audit.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
             "command": "bash src/hooks/python-test.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash src/hooks/python-audit.sh"
           }
         ]
       }

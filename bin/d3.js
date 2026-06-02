@@ -17,7 +17,9 @@ const D3_HOOKS = {
   PostToolUse: [
     { matcher: 'Edit|Write', hooks: [{ type: 'command', command: 'bash .d3/hooks/client-lint.sh' }] },
     { matcher: 'Edit|Write', hooks: [{ type: 'command', command: 'bash .d3/hooks/express-test.sh' }] },
-    { matcher: 'Edit|Write', hooks: [{ type: 'command', command: 'bash .d3/hooks/python-test.sh' }] }
+    { matcher: 'Edit|Write', hooks: [{ type: 'command', command: 'bash .d3/hooks/express-audit.sh' }] },
+    { matcher: 'Edit|Write', hooks: [{ type: 'command', command: 'bash .d3/hooks/python-test.sh' }] },
+    { matcher: 'Edit|Write', hooks: [{ type: 'command', command: 'bash .d3/hooks/python-audit.sh' }] }
   ]
 };
 
@@ -116,9 +118,10 @@ function init() {
   // Directory scaffolding
   touch(path.join(TARGET_DIR, '.d3', 'reports', '.gitkeep'));
   touch(path.join(TARGET_DIR, '.d3', 'docs', 'current', '.gitkeep'));
+  touch(path.join(TARGET_DIR, '.d3', 'docs', 'adr', '.gitkeep'));
   touch(path.join(TARGET_DIR, '.d3', 'wireframes', '.gitkeep'));
   touch(path.join(TARGET_DIR, '.d3', 'objectives', '.gitkeep'));
-  log.push('  ✓  .d3/reports/  .d3/docs/  .d3/wireframes/  .d3/objectives/');
+  log.push('  ✓  .d3/reports/  .d3/docs/  .d3/docs/adr/  .d3/wireframes/  .d3/objectives/');
 
   // settings.json hook merge
   log.push(mergeSettings());

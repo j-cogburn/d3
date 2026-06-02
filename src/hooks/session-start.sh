@@ -67,13 +67,39 @@ else
   GIT_STATE="clean"
 fi
 
-# ── Recommended action ────────────────────────────────────────────────────────
-if [ "$ACTIVE_OBJECTIVES" -gt 0 ] && [ "$READY" -eq 0 ]; then
+# ── Intent-aware recommended action ──────────────────────────────────────────
+# Detect likely session intent from multiple signals and surface the most
+# relevant next action, not a generic fallback.
+
+# Signal: are there PRs merged since the last tag that haven't been released?
+UNRELEASED_MERGES=$(git log $(git describe --tags --abbrev=0 2>/dev/null || echo "")..HEAD --oneline --merges 2>/dev/null | wc -l | tr -d ' ')
+
+# Signal: is there work in-progress from last session?
+NEEDS_REVIEW=$(grep -c 'needs-review' .d3/TASKS.md 2>/dev/null || echo 0)
+
+# Signal: was the last session a large execution batch?
+LAST_CHANGELOG_DATE=$(grep -m1 '^## ' .d3/CHANGELOG.md 2>/dev/null | sed 's/## //')
+TODAY_DATE=$(date '+%Y-%m-%d')
+
+# Determine intent profile and recommendation
+if [ "$NEEDS_REVIEW" -gt 0 ]; then
+  # Directives flagged by adversarial review need human attention
+  RECOMMENDED="/status  ($NEEDS_REVIEW directive(s) need-review — adversarial review flagged issues)"
+elif [ "$IN_PROGRESS" -gt 0 ]; then
+  # Agents were running — likely picking up where we left off
+  RECOMMENDED="/status  ($IN_PROGRESS directive(s) in-progress — check what's still running)"
+elif [ "$ACTIVE_OBJECTIVES" -gt 0 ] && [ "$READY" -eq 0 ]; then
   RECOMMENDED="/objective  (active objective needs next phase)"
 elif [ "$READY" -gt 0 ]; then
   RECOMMENDED="/execute  ($READY directive(s) ready to run)"
+elif [ "$UNRELEASED_MERGES" -gt 0 ] && [ "$READY" -eq 0 ]; then
+  # PRs merged but no tag yet — release context
+  RECOMMENDED="/release  ($UNRELEASED_MERGES merge(s) since last tag — ready to ship?)"
+elif [ "$LAST_CHANGELOG_DATE" = "$TODAY_DATE" ] && [ "$READY" -eq 0 ]; then
+  # Shipped something today — verify and sync
+  RECOMMENDED="/verify  (changes shipped today — confirm they work)"
 elif [ "$DOCS_DATE" = "never" ] && [ "$ACTIVE_OBJECTIVES" -eq 0 ]; then
-  RECOMMENDED="/objective  (define what you want to build)"
+  RECOMMENDED="/objective  (no objectives defined — start here)"
 elif [ "$DOCS_DATE" = "never" ]; then
   RECOMMENDED="/audit docs  (no docs audit on record)"
 elif [ "$UX_DATE" = "never" ]; then
@@ -81,7 +107,7 @@ elif [ "$UX_DATE" = "never" ]; then
 elif [ "$A11Y_DATE" = "never" ]; then
   RECOMMENDED="/audit accessibility  (no accessibility audit on record)"
 else
-  RECOMMENDED="/status  (nothing ready — check full snapshot)"
+  RECOMMENDED="/status  (check full snapshot for next action)"
 fi
 
 # ── Output ────────────────────────────────────────────────────────────────────

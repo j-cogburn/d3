@@ -28,14 +28,16 @@ A complete Claude Code workflow system for shipping software with AI agents. Dro
 | `/directive`, `/task` | Add work items to `.d3/TASKS.md` |
 | `/sync-docs` | Update all docs to reflect what shipped |
 
-**`src/hooks/`** — enforcement layer (installed to `.d3/hooks/`):
+**`src/hooks/`** — enforcement layer (installed to `.d3/hooks/`). Includes security audit hooks that trigger on `package.json`/`requirements.txt` changes:
 
 | Hook | Trigger | What it does |
 |---|---|---|
-| `session-start.sh` | First message per session | Injects branch, directive count, last audit dates |
+| `session-start.sh` | First message per session | Injects vision, branch, directive counts, intent-aware recommendation |
 | `client-lint.sh` | Edit/Write to `client/` | ESLint gate — exit 2 blocks the agent on failure |
 | `express-test.sh` | Edit/Write to `api-express/` | Jest/Vitest gate — exit 2 blocks on failure |
+| `express-audit.sh` | Edit/Write to `api-express/package.json` | `npm audit --audit-level=high` — exit 2 on vulnerabilities |
 | `python-test.sh` | Edit/Write to `api-python/` | pytest gate — exit 2 blocks on failure |
+| `python-audit.sh` | Edit/Write to `api-python/requirements.txt` | `pip-audit` — exit 2 on vulnerabilities |
 
 **`src/scripts/orchestrate.js`** — context-window-safe batch execution for large sprints (installed to `.d3/scripts/`). Runs one `claude` process per directive in isolated git worktrees with configurable concurrency.
 
