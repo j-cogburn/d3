@@ -10,6 +10,7 @@ A complete Claude Code workflow system for shipping software with AI agents. Dro
 
 | Command | Purpose |
 |---|---|
+| `/setup [refine]` | Populate or refine CLAUDE.md via interview. Auto-detects stack, interviews for context that can't be inferred |
 | `/objective ["title"]` | Define or refine a goal. Interviews you, determines optimal D3 workflow, executes in auto or guided mode |
 | `/spec [idea\|#issue]` | Requirements gathering → structured spec → feeds `/plan` |
 | `/wireframe <page> [mobile\|tablet]` | ASCII wireframe for a page, flow, or spec |
@@ -85,9 +86,15 @@ npm install --save-dev github:j-cogburn/d3#v1.0.0
 npx d3 init
 ```
 
-### 3. Fill in CLAUDE.md
+### 3. Populate CLAUDE.md
 
-Edit `CLAUDE.md` to describe your project, services, and dev commands. This is the single file every agent reads before doing any work — the quality of briefs depends on it.
+Open Claude Code in your project and run:
+
+```
+/setup
+```
+
+This auto-detects your directory structure, tech stack, services, and dev commands, then interviews you for what can't be inferred from code: what the product does, who uses it, what's live vs. roadmap, and key architectural decisions. CLAUDE.md is the single file every agent reads before doing any work — quality here directly impacts every agent brief.
 
 ### 4. Adapt the hooks
 
@@ -109,17 +116,15 @@ OUTPUT=$(your-test-command 2>&1)
 
 Add `ANTHROPIC_API_KEY` to your repository secrets for the CI review workflow to run.
 
-### 6. Verify
+### 6. Start building
 
-```bash
-# Open Claude Code and run:
-/status
+```
+/objective     # define your first goal — D3 determines the approach
 ```
 
-You should see the session context block (branch, directive count, last audit). Then:
-
-```bash
-/audit docs    # establish a baseline
+Or use individual commands:
+```
+/audit docs    # establish a documentation baseline
 /plan          # turn findings into directives
 /execute       # ship your first batch
 ```

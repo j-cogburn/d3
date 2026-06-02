@@ -49,7 +49,8 @@ Each phase is a discrete command. The `/sprint` command runs all five in sequenc
 
 | Command | Purpose |
 |---|---|
-| `/objective ["title"?]` | **Recommended starting point.** Interviews you to define the goal, determines the optimal D3 workflow, executes in auto or guided mode. Supports `refine OBJ-NNN` and `list`. |
+| `/setup [refine?]` | **First step after install.** Populates or refines CLAUDE.md via interview. Auto-detects tech stack, services, and dev commands; interviews for product purpose, users, status, and architectural decisions. |
+| `/objective ["title"?]` | **Recommended starting point for each goal.** Interviews you to define the goal, determines the optimal D3 workflow, executes in auto or guided mode. Supports `refine OBJ-NNN` and `list`. |
 | `/spec [idea?]` | Requirements gathering. Interview mode, idea refinement, or GitHub issue → structured spec → feed into `/plan`. |
 | `/wireframe <page> [mobile\|tablet]` | ASCII wireframe for a page, flow, or spec. Saved to `.d3/wireframes/` with timestamped filenames. |
 | `/test [service?]` | Dedicated test pass. Runs all test suites, Playwright screenshots, reports failures. Use before `/release`. |

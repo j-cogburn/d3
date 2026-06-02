@@ -132,10 +132,10 @@ function init() {
 
   console.log(`
 Next steps:
-  1. Fill in CLAUDE.md — project context, services, dev commands
-  2. Adapt .d3/hooks/ to your stack (paths and test commands)
-  3. Open Claude Code and run /status to verify
-  4. Run /audit docs to establish a baseline
+  1. Open Claude Code in this directory
+  2. Run /setup — interviews you to populate CLAUDE.md with project context
+  3. Run /objective — define your first goal; D3 determines the approach
+  4. Adapt .d3/hooks/ to your stack (paths and test commands) when ready
 `);
 }
 
