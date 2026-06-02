@@ -10,6 +10,7 @@ A complete Claude Code workflow system for shipping software with AI agents. Dro
 
 | Command | Purpose |
 |---|---|
+| `/objective ["title"]` | Define or refine a goal. Interviews you, determines optimal D3 workflow, executes in auto or guided mode |
 | `/spec [idea\|#issue]` | Requirements gathering → structured spec → feeds `/plan` |
 | `/wireframe <page> [mobile\|tablet]` | ASCII wireframe for a page, flow, or spec |
 | `/sprint` | Full cycle: audit → plan → execute → verify → sync-docs |

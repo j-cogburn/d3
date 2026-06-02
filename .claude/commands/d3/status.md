@@ -16,12 +16,16 @@ curl -sf http://localhost:3001 > /dev/null 2>&1 && echo "React UP" || echo "Reac
 curl -sf http://localhost:8000/health 2>/dev/null || echo "Python DOWN"
 
 # Recent work
-ls -t reports/*.md 2>/dev/null | head -5
+ls -t .d3/reports/*.md 2>/dev/null | head -5
+
+# Active objectives
+grep -l 'Status.*active' .d3/objectives/obj-*.md 2>/dev/null
 ```
 
 Also read:
-- `TASKS.md` — directives (status), phase task counts
-- `CHANGELOG.md` — last 10 entries
+- `.d3/TASKS.md` — directives (status), phase task counts
+- `.d3/CHANGELOG.md` — last 10 entries
+- Active objective files — current phase and spawned directives
 
 ---
 
@@ -41,6 +45,10 @@ GIT
   Local:    N commits ahead / up to date
   Dirty:    yes (N files) / clean
 
+OBJECTIVES
+  OBJ-NNN  <title>  [Phase N/M — next: /<command>]
+  (omit section if no active objectives)
+
 DIRECTIVES
   Active (in-progress): N  →  DIRECTIVE-NNN (branch), ...
   Ready to run:         N  →  DIRECTIVE-NNN, ...
@@ -51,10 +59,10 @@ RECENT WORK  (last 5 CHANGELOG entries)
   ...
 
 LAST AUDIT
-  docs:     YYYY-MM-DD  (N days ago) — reports/docs-audit-...
-  product:  YYYY-MM-DD  (N days ago) — reports/product-audit-...
-  design:   YYYY-MM-DD  (N days ago) — reports/design-audit-...
-  vision:   YYYY-MM-DD  (N days ago) — reports/vision-audit-...
+  docs:     YYYY-MM-DD  (N days ago) — .d3/reports/docs-audit-...
+  product:  YYYY-MM-DD  (N days ago) — .d3/reports/product-audit-...
+  design:   YYYY-MM-DD  (N days ago) — .d3/reports/design-audit-...
+  vision:   YYYY-MM-DD  (N days ago) — .d3/reports/vision-audit-...
   code:     never / YYYY-MM-DD
 
 RECOMMENDED NEXT ACTION

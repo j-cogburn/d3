@@ -38,6 +38,13 @@ READY=$(grep -c '\*\*Status:\*\* ready' .d3/TASKS.md 2>/dev/null || echo 0)
 IN_PROGRESS=$(grep -c 'in-progress' .d3/TASKS.md 2>/dev/null || echo 0)
 READY_IDS=$(grep -B4 '\*\*Status:\*\* ready' .d3/TASKS.md 2>/dev/null | grep '### DIRECTIVE' | sed 's/### //' | sed 's/:.*//' | tr '\n' ' ')
 
+# ── Objectives ───────────────────────────────────────────────────────────────
+ACTIVE_OBJECTIVES=$(grep -l 'Status.*active' .d3/objectives/obj-*.md 2>/dev/null | wc -l | tr -d ' ')
+OBJECTIVE_SUMMARY=""
+if [ "$ACTIVE_OBJECTIVES" -gt 0 ]; then
+  OBJECTIVE_SUMMARY=$(grep -h '^\*\*ID:\*\*\|^# Objective:' .d3/objectives/obj-*.md 2>/dev/null | paste - - | sed 's/# Objective: //' | sed 's/\*\*ID:\*\* //' | awk '{print "  " $2 "  " $1}' | head -3)
+fi
+
 # ── Skills ───────────────────────────────────────────────────────────────────
 SKILL_COUNT=$(ls .d3/skills/ 2>/dev/null | wc -l | tr -d ' ')
 
@@ -55,8 +62,12 @@ else
 fi
 
 # ── Recommended action ────────────────────────────────────────────────────────
-if [ "$READY" -gt 0 ]; then
+if [ "$ACTIVE_OBJECTIVES" -gt 0 ] && [ "$READY" -eq 0 ]; then
+  RECOMMENDED="/objective  (active objective needs next phase)"
+elif [ "$READY" -gt 0 ]; then
   RECOMMENDED="/execute  ($READY directive(s) ready to run)"
+elif [ "$DOCS_DATE" = "never" ] && [ "$ACTIVE_OBJECTIVES" -eq 0 ]; then
+  RECOMMENDED="/objective  (define what you want to build)"
 elif [ "$DOCS_DATE" = "never" ]; then
   RECOMMENDED="/audit docs  (no docs audit on record)"
 elif [ "$UX_DATE" = "never" ]; then
@@ -73,6 +84,11 @@ echo "SESSION CONTEXT — ${TODAY}"
 echo "=============================="
 echo "Branch:     ${BRANCH} (${GIT_STATE})"
 echo ""
+if [ "$ACTIVE_OBJECTIVES" -gt 0 ]; then
+echo "OBJECTIVES  (${ACTIVE_OBJECTIVES} active)"
+echo "${OBJECTIVE_SUMMARY}"
+echo ""
+fi
 echo "DIRECTIVES"
 echo "  Ready:       ${READY}  ${READY_IDS}"
 echo "  In-progress: ${IN_PROGRESS}"

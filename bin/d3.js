@@ -113,7 +113,8 @@ function init() {
   touch(path.join(TARGET_DIR, '.d3', 'reports', '.gitkeep'));
   touch(path.join(TARGET_DIR, '.d3', 'docs', 'current', '.gitkeep'));
   touch(path.join(TARGET_DIR, '.d3', 'wireframes', '.gitkeep'));
-  log.push('  ✓  .d3/reports/  .d3/docs/  .d3/wireframes/');
+  touch(path.join(TARGET_DIR, '.d3', 'objectives', '.gitkeep'));
+  log.push('  ✓  .d3/reports/  .d3/docs/  .d3/wireframes/  .d3/objectives/');
 
   // settings.json hook merge
   log.push(mergeSettings());

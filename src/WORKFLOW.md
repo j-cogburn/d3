@@ -49,6 +49,7 @@ Each phase is a discrete command. The `/sprint` command runs all five in sequenc
 
 | Command | Purpose |
 |---|---|
+| `/objective ["title"?]` | **Recommended starting point.** Interviews you to define the goal, determines the optimal D3 workflow, executes in auto or guided mode. Supports `refine OBJ-NNN` and `list`. |
 | `/spec [idea?]` | Requirements gathering. Interview mode, idea refinement, or GitHub issue → structured spec → feed into `/plan`. |
 | `/wireframe <page> [mobile\|tablet]` | ASCII wireframe for a page, flow, or spec. Saved to `.d3/wireframes/` with timestamped filenames. |
 | `/test [service?]` | Dedicated test pass. Runs all test suites, Playwright screenshots, reports failures. Use before `/release`. |
@@ -124,6 +125,7 @@ This means agent briefs are always current — they reflect the actual codebase 
 | `.d3/reports/` | Timestamped audit output. `docs-audit-*.md`, `product-audit-*.md`, etc. |
 | `.d3/skills/` | Engineering skills (vendored from [agent-skills](https://github.com/addyosmani/agent-skills) + custom `wireframe` skill). Referenced in directive `**Skills:**` field; injected into agent briefs at execution time. |
 | `.d3/wireframes/` | ASCII wireframes output by `/wireframe`. Naming: `<slug>-YYYY-MM-DD-HHMM.md`. Feed into `/plan` to create implementation directives. |
+| `.d3/objectives/` | Objective files output by `/objective`. Naming: `obj-NNN-<slug>-TIMESTAMP.md`. Track goal → approach → progress → directives spawned. |
 
 ---
 
