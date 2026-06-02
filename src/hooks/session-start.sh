@@ -38,6 +38,12 @@ READY=$(grep -c '\*\*Status:\*\* ready' .d3/TASKS.md 2>/dev/null || echo 0)
 IN_PROGRESS=$(grep -c 'in-progress' .d3/TASKS.md 2>/dev/null || echo 0)
 READY_IDS=$(grep -B4 '\*\*Status:\*\* ready' .d3/TASKS.md 2>/dev/null | grep '### DIRECTIVE' | sed 's/### //' | sed 's/:.*//' | tr '\n' ' ')
 
+# ── Vision ───────────────────────────────────────────────────────────────────
+VISION=""
+if [ -f ".d3/vision.md" ]; then
+  VISION=$(awk '/^## Vision/{found=1; next} found && NF{print; exit}' .d3/vision.md 2>/dev/null)
+fi
+
 # ── Objectives ───────────────────────────────────────────────────────────────
 ACTIVE_OBJECTIVES=$(grep -l 'Status.*active' .d3/objectives/obj-*.md 2>/dev/null | wc -l | tr -d ' ')
 OBJECTIVE_SUMMARY=""
@@ -82,6 +88,10 @@ fi
 TODAY=$(date '+%Y-%m-%d')
 echo "SESSION CONTEXT — ${TODAY}"
 echo "=============================="
+if [ -n "$VISION" ]; then
+echo "Vision:     ${VISION}"
+echo ""
+fi
 echo "Branch:     ${BRANCH} (${GIT_STATE})"
 echo ""
 if [ "$ACTIVE_OBJECTIVES" -gt 0 ]; then

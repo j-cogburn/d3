@@ -12,15 +12,17 @@ This command orchestrates existing commands in sequence. Run each phase as instr
 
 ## Phase 0 — Status check
 
-Before anything else, read `.d3/TASKS.md` and `.d3/CHANGELOG.md`. Print a brief orientation:
+Before anything else, read `.d3/TASKS.md`, `.d3/CHANGELOG.md`, and `.d3/vision.md` if present. Print a brief orientation:
 
 ```
 SPRINT START
 =============
+Vision:             <one-sentence vision from .d3/vision.md — or "not defined (run /vision)">
 Active directives:  N (IDs)
 Ready directives:   N (IDs)
 Last merge:         <date and PR from .d3/CHANGELOG.md>
 Last audit:         <date from most recent .d3/reports/*.md or "never">
+Last vision audit:  <date from .d3/reports/vision-audit-*.md or "never">
 ```
 
 If there are zero ready directives AND no recent audit, ask:

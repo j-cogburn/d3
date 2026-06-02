@@ -97,6 +97,15 @@ Select the approach from this routing matrix:
 - Bug with unclear root cause → always start with `/audit code`
 - Epic → always break down first; confirm sub-objectives before proceeding
 
+**Vision check:** If `.d3/vision.md` exists, check the objective against it:
+- Does this objective advance the vision or serve a stated user type?
+- Does it conflict with any anti-goal? If yes, flag it explicitly:
+  ```
+  ⚠ Vision conflict: this objective touches anti-goal — "<anti-goal text>"
+  Proceed anyway? (The anti-goal may need to be revised, or this objective reconsidered.)
+  ```
+- Does the recommended approach align with the decision principles (X over Y)?
+
 ---
 
 ## Step 4 — Present approach and confirm mode

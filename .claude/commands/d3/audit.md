@@ -28,10 +28,11 @@ Get timestamp: `date '+%Y-%m-%d-%H%M'`
 
 Read these before any audit dimension:
 1. `CLAUDE.md` — project overview, implementation status, architecture
-2. `.d3/docs/roadmap/product-vision.md` — the north star: vision, user types, value proposition
-3. `.d3/docs/roadmap/execution-plan.md` — phased roadmap, current phase priorities
-4. `.d3/TASKS.md` — what's in-progress, what's blocked, what's ready
-5. `.d3/CHANGELOG.md` — what has actually shipped
+2. `.d3/vision.md` — project vision: one-sentence purpose, users, strategic bets, anti-goals, decision principles *(primary source — required for vision dimension)*
+3. `.d3/docs/roadmap/product-vision.md` — extended vision docs if present *(supplement to .d3/vision.md)*
+4. `.d3/docs/roadmap/execution-plan.md` — phased roadmap, current phase priorities
+5. `.d3/TASKS.md` — what's in-progress, what's blocked, what's ready
+6. `.d3/CHANGELOG.md` — what has actually shipped
 
 ---
 
@@ -346,29 +347,43 @@ WCAG 2.1 AA compliance across all surfaces: keyboard navigation, screen reader c
 ## DIMENSION: vision
 
 ### What it checks
-Strategic alignment with product vision, economics model, and execution plan sequencing.
+Strategic alignment between the current implementation, active directives, and the project vision defined in `.d3/vision.md`. Detects drift, anti-goal violations, and sequencing issues before they become expensive to reverse.
 
 ### Steps
 
-1. This is a founding-team-level briefing. Read `.d3/docs/roadmap/economics.md` and `.d3/docs/roadmap/obstacles.md` in addition to the Step 1 context.
+1. **Primary source:** Read `.d3/vision.md` — vision sentence, users, strategic bets, anti-goals, and decision principles. If this file is missing, stop: "Run `/vision` to define the project vision before auditing against it."
 
-2. Evaluate across five dimensions:
-   - **Product–vision fit** — does the implementation reflect the one-sentence vision?
-   - **Sequencing** — is work ordered to start the revenue flywheel as fast as possible?
-   - **User alignment** — does the quant experience match quant sophistication? Does the trader experience communicate trust?
-   - **Business model integrity** — are the load-bearing Year 1–2 revenue streams being built?
-   - **Risk exposure** — which obstacles are being actively mitigated? Which are being ignored?
+2. **Supplementary sources:** Read `.d3/docs/roadmap/economics.md` and `.d3/docs/roadmap/obstacles.md` if present.
 
-3. Write briefing to `.d3/reports/vision-audit-TIMESTAMP.md`:
+3. **Evaluate implementation against vision:**
+   - **Vision fit** — does the current implementation reflect the one-sentence vision? What's been built that serves it? What's been built that doesn't?
+   - **Anti-goal drift** — is any shipped or in-progress work touching the anti-goals? Name specifically.
+   - **Strategic bet coverage** — for each strategic bet, what's being actively built to validate or de-risk it? What's being ignored?
+   - **Sequencing** — is work ordered to deliver user value as fast as possible, or is effort going to infrastructure/polish before the core loop works?
+   - **User alignment** — does the implementation serve the stated user types and their jobs-to-be-done?
+
+4. **Evaluate active directives against vision:**
+   - For each ready or in-progress directive, assess: aligned / tangential / conflicts with anti-goals
+   - Flag any directives that appear to expand scope beyond the vision
+
+5. Write briefing to `.d3/reports/vision-audit-TIMESTAMP.md`:
    ```markdown
-   # Vision Alignment Briefing
-   ## North Star Verdict [Aligned/Drifting/At Risk/Misaligned + biggest risk]
-   ## What Is Working [3–5 bullets]
-   ## What Is Drifting [per area: what, from what, consequence]
-   ## Silent Risks
-   ## Prioritization Recommendations [top 3–5 highest-leverage moves]
+   # Vision Audit
+   **Date:** YYYY-MM-DD HH:MM
+   **Vision:** <one-sentence vision from .d3/vision.md>
+
+   ## Verdict [Aligned / Drifting / At Risk / Misaligned]
+   ## Vision–Implementation Fit
+   ## Anti-Goal Violations [if any]
+   ## Strategic Bet Coverage [per bet: building / not building / blocked]
+   ## Directive Alignment [aligned N / tangential N / conflicts N]
+   ## Sequencing Assessment
+   ## Top 3 Recommendations [highest-leverage moves to close the gap]
    ## The Question You Should Be Asking
    ```
+
+6. Print: `Report written: .d3/reports/vision-audit-TIMESTAMP.md`
+   Then offer: `Run /vision check for a quick directive-by-directive alignment view.`
 
 ---
 

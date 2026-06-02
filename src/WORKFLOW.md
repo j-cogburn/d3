@@ -126,6 +126,7 @@ This means agent briefs are always current — they reflect the actual codebase 
 | `.d3/reports/` | Timestamped audit output. `docs-audit-*.md`, `product-audit-*.md`, etc. |
 | `.d3/skills/` | Engineering skills (vendored from [agent-skills](https://github.com/addyosmani/agent-skills) + custom `wireframe` skill). Referenced in directive `**Skills:**` field; injected into agent briefs at execution time. |
 | `.d3/wireframes/` | ASCII wireframes output by `/wireframe`. Naming: `<slug>-YYYY-MM-DD-HHMM.md`. Feed into `/plan` to create implementation directives. |
+| `.d3/vision.md` | **Project vision — single source of strategic truth.** Defined by `/vision`. Read by every agent brief, `/plan`, `/audit vision`, `/objective`, and `/spec`. Contains: vision sentence, users + JTBD, success horizon, strategic bets, anti-goals, decision principles. |
 | `.d3/objectives/` | Objective files output by `/objective`. Naming: `obj-NNN-<slug>-TIMESTAMP.md`. Track goal → approach → progress → directives spawned. |
 
 ---

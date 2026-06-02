@@ -40,6 +40,10 @@ SERVICES
   React     UP / DOWN
   Python    UP / DOWN
 
+VISION
+  <one-sentence vision from .d3/vision.md>
+  Last audit: YYYY-MM-DD / never  (omit section if .d3/vision.md doesn't exist)
+
 GIT
   Branch:   main
   Local:    N commits ahead / up to date

@@ -9,11 +9,11 @@ Parse a source and propose directives to add to the DIRECTIVES section of `.d3/T
 
 ---
 
-## Step 1 — Read `.d3/TASKS.md`
+## Step 1 — Load context
 
-Find the highest existing `DIRECTIVE-NNN` ID. New IDs start from N+1.
+Read `.d3/TASKS.md` — find the highest existing `DIRECTIVE-NNN` ID (new IDs start from N+1) and collect active titles to avoid duplicates.
 
-Also collect all active TASK-NNN and DIRECTIVE-NNN titles to avoid duplicates.
+If `.d3/vision.md` exists, read it now. Extract: vision sentence, anti-goals list, and decision principles. Use these to assess alignment for each proposal in Step 4.
 
 ---
 
@@ -83,9 +83,12 @@ Print each proposal:
     Services: <list>
     Skills:   <list or none>
     Agent:    <type>
+    Vision:   ✓ aligned / ⚠ tangential / ✗ conflicts with anti-goal: "<text>"
     Description: <2-3 sentences>
     Done when:   <criterion>
 ```
+
+Omit the `Vision:` line if `.d3/vision.md` does not exist. If a proposal conflicts with an anti-goal, include it in the list but flag it clearly — the user decides whether to proceed, defer, or refine the anti-goal.
 
 Then: `Found N candidates. Which would you like to add?`
 

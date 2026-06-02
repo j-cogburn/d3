@@ -92,9 +92,17 @@ For each directive, construct the agent brief. Build it by composing live conten
 - [ ] <done-when item 1>
 - [ ] <done-when item 2>
 
+## Project vision
+<If `.d3/vision.md` exists, read it and include:
+- The Vision line (one sentence — what the project is for)
+- Anti-goals (what it deliberately does NOT do — respect these in every decision)
+- Decision principles (the X-over-Y tiebreakers)
+If the file does not exist, skip this section silently.>
+
 ## Out of scope
 - Do not edit `.d3/TASKS.md`, TASK.template.md, or any .claude/ file
 - Do not modify other directives or tasks
+- Do not build features that conflict with the project's anti-goals (see Project vision above)
 
 ## Files to create / edit
 <infer specific paths from description and services>

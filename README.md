@@ -11,6 +11,7 @@ A complete Claude Code workflow system for shipping software with AI agents. Dro
 | Command | Purpose |
 |---|---|
 | `/setup [refine]` | Populate or refine CLAUDE.md via interview. Auto-detects stack, interviews for context that can't be inferred |
+| `/vision [refine\|check]` | Define or refine the project vision. Creates `.d3/vision.md` — read by every agent and planning command |
 | `/objective ["title"]` | Define or refine a goal. Interviews you, determines optimal D3 workflow, executes in auto or guided mode |
 | `/spec [idea\|#issue]` | Requirements gathering → structured spec → feeds `/plan` |
 | `/wireframe <page> [mobile\|tablet]` | ASCII wireframe for a page, flow, or spec |
@@ -86,15 +87,17 @@ npm install --save-dev github:j-cogburn/d3#v1.0.0
 npx d3 init
 ```
 
-### 3. Populate CLAUDE.md
+### 3. Configure your project
 
-Open Claude Code in your project and run:
+Open Claude Code in your project directory and run these three commands in order:
 
 ```
-/setup
+/setup    — populate CLAUDE.md (auto-detects stack, interviews for context)
+/vision   — define the project vision (purpose, users, anti-goals, decision principles)
+/objective — define your first goal; D3 determines the optimal approach
 ```
 
-This auto-detects your directory structure, tech stack, services, and dev commands, then interviews you for what can't be inferred from code: what the product does, who uses it, what's live vs. roadmap, and key architectural decisions. CLAUDE.md is the single file every agent reads before doing any work — quality here directly impacts every agent brief.
+`CLAUDE.md` and `.d3/vision.md` are read by every agent before doing any work. Quality here directly impacts every agent brief — an agent with clear vision context makes better implementation decisions than one without it.
 
 ### 4. Adapt the hooks
 

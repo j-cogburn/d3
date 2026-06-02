@@ -99,13 +99,17 @@ function init() {
   }
 
   // State files — only create if absent, never overwrite
-  for (const [rel, tmpl] of [['.d3/TASKS.md', 'TASKS.md'], ['.d3/CHANGELOG.md', 'CHANGELOG.md']]) {
+  for (const [rel, tmpl] of [
+    ['.d3/TASKS.md',     'TASKS.md'],
+    ['.d3/CHANGELOG.md', 'CHANGELOG.md'],
+    ['.d3/vision.md',    'vision.md'],
+  ]) {
     const dest = path.join(TARGET_DIR, rel);
     if (fs.existsSync(dest)) {
       log.push(`  ⊘  ${rel} — already exists, preserved`);
     } else {
       copyFile(path.join(PKG_DIR, 'templates', tmpl), dest);
-      log.push(`  ✓  ${rel} (blank)`);
+      log.push(`  ✓  ${rel}${rel === '.d3/vision.md' ? ' (run /vision to define)' : ' (blank)'}`);
     }
   }
 
@@ -133,9 +137,10 @@ function init() {
   console.log(`
 Next steps:
   1. Open Claude Code in this directory
-  2. Run /setup — interviews you to populate CLAUDE.md with project context
-  3. Run /objective — define your first goal; D3 determines the approach
-  4. Adapt .d3/hooks/ to your stack (paths and test commands) when ready
+  2. Run /setup  — populate CLAUDE.md with project context (auto-detects stack, interviews for the rest)
+  3. Run /vision — define the project vision (what you're building, for whom, and what you won't build)
+  4. Run /objective — define your first goal; D3 determines the optimal approach
+  5. Adapt .d3/hooks/ to your stack (paths and test commands) when ready
 `);
 }
 

@@ -53,6 +53,11 @@ Invoke these skills:
 - `spec-driven-development` from `.d3/skills/spec-driven-development/SKILL.md`
 - If the spec involves UI/UX: also invoke `user-research-synthesis` (`.d3/skills/user-research-synthesis/SKILL.md`) to frame user stories as JTBD statements, and `user-journey-mapping` (`.d3/skills/user-journey-mapping/SKILL.md`) to map the flow before defining screens
 
+If `.d3/vision.md` exists, read it before writing the spec. Use the vision to:
+- Ground the Problem section in the stated user types and their jobs-to-be-done
+- Ensure success criteria advance the north star metric
+- Flag any scope that touches anti-goals — note it explicitly in Open questions
+
 Write the spec in this format:
 
 ```markdown

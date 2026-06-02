@@ -24,6 +24,7 @@ and the current implementation status (what's live vs. roadmap).]
 │   │   └── roadmap/    Forward-looking plans
 │   ├── skills/         Engineering skills (api-design, tdd, security, wireframe, ...)
 │   ├── wireframes/     ASCII wireframes — output of /wireframe command
+│   ├── vision.md       Project vision — run /vision to define
 │   ├── objectives/     Goals + approach + progress — output of /objective command
 │   ├── TASKS.md        Task backlog + directives — orchestrator-owned
 │   ├── CHANGELOG.md    Shipped work log — one entry per merged PR
