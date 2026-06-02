@@ -150,12 +150,32 @@ For each gap:
 
 ---
 
+## Step 4b — Compute Product Completeness score
+
+Before outputting, calculate the Product Completeness score:
+
+```
+Start at 100.
+For each CORE gap marked Missing:    −10 pts  (deductions capped at 40)
+For each CORE gap marked Partial/Weak: −5 pts  (capped at 20)
+For each EXPERIENCE gap:              −3 pts  (capped at 15)
+For each DEFENSIVE gap:               −2 pts  (capped at 10)
+Gaps already tracked in TASKS.md:    half the above deduction
+
+Product Completeness = max(0, 100 − total deductions)
+```
+
+Assign a letter grade using the standard scale (A ≥90, B ≥75, C ≥60, D ≥45, F <45).
+
+---
+
 ## Step 5 — Output
 
 ```
 PRODUCT GAP ANALYSIS — YYYY-MM-DD
 =====================================
 Product: [name]
+PRODUCT COMPLETENESS: N/100  [GRADE]  (used by /evaluate Business Completeness dimension)
 Gaps found: N  (N quick wins · N strategic · N fill-ins · N deferred)
 Already tracked in TASKS.md: N gaps (not duplicated below)
 

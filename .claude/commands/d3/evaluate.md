@@ -1,11 +1,11 @@
-Comprehensive project assessment across 8 dimensions. Produces a scored report that shows where the project stands, where it's drifting, and what to fix first.
+Comprehensive project assessment across 10 dimensions — 8 technical/product + Product Completeness + Business. Produces a unified scored report with letter grades, trajectory tracking, and prioritised improvement actions.
 
 **Usage:**
-- `/evaluate` — full assessment, all dimensions
+- `/evaluate` — full assessment, all 10 dimensions
 - `/evaluate code` — score a single dimension
 - `/evaluate --compare` — compare against the previous assessment (show trajectory)
 
-Different from `/audit`: `/audit` finds specific problems and creates directives. `/evaluate` produces a scored snapshot of overall project health — useful for understanding where you are, tracking improvement over time, and prioritising what matters most.
+Different from `/audit`: `/audit` finds specific problems. `/evaluate` produces a unified quality score across every domain — technical, product, and business — with letter grades on a consistent 0–100 scale.
 
 ---
 
@@ -46,10 +46,20 @@ ls api-python/.venv/bin/pip-audit 2>/dev/null && \
 # Performance baseline
 cat .d3/reports/performance-baseline.json 2>/dev/null | head -20
 
-# Audit recency — last date for each dimension
-for dim in docs-audit product-audit design-audit ux-audit accessibility-audit vision-audit code-audit; do
+# Audit recency and findings severity
+for dim in code-audit ux-audit design-audit docs-audit product-audit \
+           accessibility-audit vision-audit; do
   f=$(ls -t .d3/reports/${dim}-*.md 2>/dev/null | head -1)
-  echo "$dim: ${f:-never}"
+  if [ -n "$f" ]; then
+    # Recency
+    echo "$dim: $f"
+    # Count Critical and High severity markers in the report
+    CRIT=$(grep -c -i 'Critical\b' "$f" 2>/dev/null || echo 0)
+    HIGH=$(grep -c -i '\bHigh\b' "$f" 2>/dev/null || echo 0)
+    echo "  critical=$CRIT high=$HIGH"
+  else
+    echo "$dim: never"
+  fi
 done
 
 # Documentation
@@ -67,7 +77,7 @@ ls docs/design/*.md 2>/dev/null | wc -l
 grep -m1 'Result\|Pass\|Fail' \
   $(ls -t .d3/reports/accessibility-audit-*.md 2>/dev/null | head -1) 2>/dev/null
 
-# Hooks
+# Hooks and CI
 grep -c 'express-audit\|python-audit\|session-start' .claude/settings.json 2>/dev/null || echo 0
 ls .github/workflows/*.yml 2>/dev/null | wc -l
 
@@ -75,13 +85,23 @@ ls .github/workflows/*.yml 2>/dev/null | wc -l
 grep -c 'complete' .d3/TASKS.md 2>/dev/null || echo 0
 ls -t .d3/reports/retro-*.md 2>/dev/null | head -1
 ls .d3/docs/lessons/*.md 2>/dev/null | grep -v .gitkeep | wc -l
+
+# Product Completeness — from most recent gap report
+GAP_REPORT=$(ls -t .d3/reports/gap-*.md 2>/dev/null | head -1)
+[ -n "$GAP_REPORT" ] && grep 'PRODUCT COMPLETENESS\|Core gaps\|Experience gaps' \
+  "$GAP_REPORT" | head -5
+
+# Business — from most recent venture report
+VENTURE_REPORT=$(ls -t .d3/reports/venture-*.md 2>/dev/null | head -1)
+[ -n "$VENTURE_REPORT" ] && grep 'Market score\|PRIMARY VECTOR\|Revenue projection\|12 months' \
+  "$VENTURE_REPORT" | head -5
 ```
 
 ---
 
 ## Step 2 — Score each dimension
 
-Apply the scoring rubric. Each dimension is max **100 points**. Apply only criteria relevant to this project's stack — if a service doesn't exist, skip its criteria and scale proportionally.
+Each dimension is max **100 points**. Scale proportionally if a service doesn't exist.
 
 ---
 
@@ -100,11 +120,15 @@ Apply the scoring rubric. Each dimension is max **100 points**. Apply only crite
 
 | Criterion | Points | How to check |
 |---|---|---|
-| All tests pass | 25 | Test command exit code 0 |
-| Line coverage ≥ 70% on all services | 25 | Coverage report output |
-| ≤ 5 TODO/FIXME/HACK markers in production paths | 20 | grep count |
-| Last `/audit code` within 30 days | 15 | Recency of `code-audit-*.md` |
-| Mutation score ≥ 70% (if baseline exists) | 15 | `.d3/reports/mutation-*.json` or skip/scale |
+| All tests pass | 20 | Test command exit code 0 |
+| Line coverage ≥ 70% on all services | 20 | Coverage report output |
+| ≤ 5 TODO/FIXME/HACK markers in production paths | 15 | grep count |
+| Last `/audit code` within 30 days | 10 | Recency of `code-audit-*.md` |
+| 0 Critical findings in most recent code audit | 20 | Critical count from report |
+| 0 High findings in most recent code audit | 10 | High count from report (deduct 2 per finding, min 0) |
+| Mutation score ≥ 70% (if baseline exists) | 5 | `.d3/reports/mutation-*.json` or skip/scale |
+
+*If no code audit has been run: omit the findings criteria and scale the 30 available points proportionally across the remaining criteria.*
 
 ---
 
@@ -115,7 +139,7 @@ Apply the scoring rubric. Each dimension is max **100 points**. Apply only crite
 | `npm audit` shows 0 high/critical vulnerabilities | 35 | audit JSON output |
 | `pip-audit` shows 0 vulnerabilities | 25 | pip-audit JSON output |
 | Security hooks configured (express-audit + python-audit) | 20 | grep .claude/settings.json |
-| No hardcoded secrets pattern in codebase | 20 | `grep -rn "api_key\|password\|secret" --include="*.js" --include="*.py"` (exclude test/config files) |
+| No hardcoded secrets pattern in codebase | 20 | `grep -rn "api_key\|password\|secret"` (exclude test/config) |
 
 ---
 
@@ -128,7 +152,7 @@ Apply the scoring rubric. Each dimension is max **100 points**. Apply only crite
 | LCP ≤ 2.5s | 25 | `lcp` field in baseline |
 | CLS ≤ 0.1 | 20 | `cls` field in baseline |
 
-If no baseline exists: 0/100 with note "Run `/test react` to establish a performance baseline."
+If no baseline exists: 0/100 — "Run `/test react` to establish a performance baseline."
 
 ---
 
@@ -148,11 +172,16 @@ If no baseline exists: 0/100 with note "Run `/test react` to establish a perform
 
 | Criterion | Points | How to check |
 |---|---|---|
-| Last `/audit ux` within 60 days | 25 | Recency of `ux-audit-*.md` |
-| Last `/audit design` within 60 days | 25 | Recency of `design-audit-*.md` |
-| Last `/audit product` within 60 days | 20 | Recency of `product-audit-*.md` |
-| Wireframes exist in `.d3/wireframes/` | 15 | ≥ 1 .md file besides .gitkeep |
+| Last `/audit ux` within 60 days | 10 | Recency of `ux-audit-*.md` |
+| 0 Critical findings in most recent UX audit | 20 | Critical count from ux-audit report |
+| ≤ 3 High findings in most recent UX audit | 10 | High count (deduct 2 per finding above 3, min 0) |
+| Last `/audit design` within 60 days | 10 | Recency of `design-audit-*.md` |
+| 0 Critical findings in most recent design audit | 15 | Critical count from design-audit report |
+| Last `/audit product` within 60 days | 10 | Recency of `product-audit-*.md` |
+| Wireframes exist in `.d3/wireframes/` | 10 | ≥ 1 .md file besides .gitkeep |
 | Design documentation exists (`docs/design/`) | 15 | ≥ 1 .md file |
+
+*If audits have never been run: omit findings criteria and scale proportionally. A 0-finding report earns full finding points.*
 
 ---
 
@@ -164,7 +193,28 @@ If no baseline exists: 0/100 with note "Run `/test react` to establish a perform
 | Most recent audit shows overall Pass | 40 | `Result` or `Pass/Fail` line in report |
 | Last accessibility audit within 30 days | 20 | Recency check |
 
-If never audited: 0/100 with note "Run `/audit accessibility` — this is the biggest gap."
+If never audited: 0/100 — "Run `/audit accessibility` — this is the biggest gap."
+
+---
+
+### PRODUCT COMPLETENESS (max 100)
+
+Reads from the most recent `.d3/reports/gap-*.md`. If the report contains a `PRODUCT COMPLETENESS: N/100` line, use that directly. Otherwise, estimate from gap counts.
+
+| Criterion | Points | How to check |
+|---|---|---|
+| `/gap` has ever been run | 10 | Any `gap-*.md` exists |
+| Product Completeness score from gap report | 75 | Read `PRODUCT COMPLETENESS: N/100` → scale to 75 pts |
+| Completeness score improving vs. previous gap report | 15 | Compare two most recent gap reports |
+
+**Estimating if no explicit score:** deduct from 100:
+- Each Core gap (Missing): −10 pts (cap at −40)
+- Each Core gap (Partial/Weak): −5 pts (cap at −20)
+- Each Experience gap: −3 pts (cap at −15)
+- Each Defensive gap: −2 pts (cap at −10)
+- Gaps already tracked in TASKS.md: half deduction
+
+If no gap report exists: 0/100 — "Run `/gap` — product completeness not yet assessed."
 
 ---
 
@@ -173,80 +223,87 @@ If never audited: 0/100 with note "Run `/audit accessibility` — this is the bi
 | Criterion | Points | How to check |
 |---|---|---|
 | Vision is defined | 15 | `.d3/vision.md` is non-stub |
-| ≥ 1 directive has been completed (CHANGELOG entries) | 20 | CHANGELOG has entries |
+| ≥ 1 directive has been completed | 20 | CHANGELOG has entries |
 | CI review workflow configured | 15 | `.github/workflows/*.yml` exists |
 | D3 hooks configured (≥ 3 hooks in settings.json) | 20 | grep count |
 | Last retro within 90 days | 15 | Recency of `retro-*.md` |
-| Lessons exist (team learning from failures) | 15 | Any `lessons/*.md` besides .gitkeep |
+| Lessons exist (learning from failures) | 15 | Any `lessons/*.md` besides .gitkeep |
+
+---
+
+### BUSINESS (max 100)
+
+Reads from the most recent `.d3/reports/venture-*.md`.
+
+| Criterion | Points | How to check |
+|---|---|---|
+| `/venture` has ever been run | 10 | Any `venture-*.md` exists |
+| Market score × 7 (converts 0–10 → 0–70 pts) | 70 | Read `**Market score:** N.N/10` from report |
+| Primary monetization vector identified | 10 | `PRIMARY VECTOR:` line present in report |
+| Revenue projections with explicit assumptions | 10 | Revenue projection table present in report |
+
+If no venture report exists: 0/100 — "Run `/venture` — business quality not yet assessed."
 
 ---
 
 ## Step 3 — Compute overall score
 
 ```
-Overall = average of all 8 dimension scores (rounded to nearest integer)
+Overall = average of all 10 dimension scores (rounded to nearest integer)
 ```
 
 Letter grade:
-- **A** (90–100) — Production-ready, exemplary
+- **A** (90–100) — Exemplary across all domains
 - **B** (75–89) — Strong, minor gaps
 - **C** (60–74) — Functional, notable improvement areas
-- **D** (45–59) — Significant gaps, not production-ready
-- **F** (< 45)  — Critical gaps, substantial work needed
+- **D** (45–59) — Significant gaps
+- **F** (< 45) — Critical gaps, substantial work needed
 
 ---
 
 ## Step 4 — Render the report
-
-Print to console:
 
 ```
 PROJECT ASSESSMENT — YYYY-MM-DD
 ================================
 OVERALL: NN/100  [GRADE]
 
-DIMENSION SCORES
-────────────────────────────────────────────────────
-Vision         ████████████████░░░░  82/100  B
-Code           ████████░░░░░░░░░░░░  43/100  D  ⚠
-Security       ███████████████░░░░░  77/100  B
-Performance    ░░░░░░░░░░░░░░░░░░░░   0/100  F  ⚠  (no baseline)
-Documentation  █████████████░░░░░░░  68/100  C
-UX & Design    ████████████░░░░░░░░  62/100  C
-Accessibility  ████░░░░░░░░░░░░░░░░  22/100  F  ⚠
-Process        █████████████████░░░  86/100  B
-────────────────────────────────────────────────────
+TECHNICAL & PRODUCT                        PRODUCT & BUSINESS
+──────────────────────────────────────     ─────────────────────────────────────
+Vision              [bar]  NN/100  X        Product Completeness  [bar]  NN/100  X
+Code                [bar]  NN/100  X  ⚠?    Business              [bar]  NN/100  X  ⚠?
+Security            [bar]  NN/100  X
+Performance         [bar]  NN/100  X  ⚠?
+Documentation       [bar]  NN/100  X
+UX & Design         [bar]  NN/100  X  ⚠?
+Accessibility       [bar]  NN/100  X  ⚠?
+Process             [bar]  NN/100  X
+──────────────────────────────────────────────────────────────────────────────
 
 CRITICAL (score < 45)
-  Performance:    0  — No baseline. Run /test react to establish one.
-  Accessibility: 22  — Never audited. Run /audit accessibility.
+  [dimension]: N — [specific reason and fix]
 
 WEAK (45–59)
-  Code: 43 — Tests passing but coverage 52% (below 70% threshold).
-             14 TODO markers in production paths.
+  [dimension]: N — [specific reason]
 
-COMPARISON vs 2026-05-15 assessment (score: 58 → 61, +3)
-  Vision:         72 → 82  ↑ +10  (vision defined)
-  Code:           48 → 43  ↓ -5   (coverage dropped)
-  Security:       75 → 77  ↑ +2
-  Performance:     0 →  0  —  unchanged
-  Documentation:  60 → 68  ↑ +8
+[COMPARISON vs previous — if --compare flag]
+  [dimension]: N → N  ↑/↓ ±N  ([what changed])
 
 TOP 3 RECOMMENDED ACTIONS
-  1. /audit accessibility   — highest leverage, 0/100 → potential +22 on overall
-  2. /test react            — establish performance baseline, 0/100 → potential +10
-  3. /improve code          — coverage below threshold (-5 pts since last assessment)
+  1. /[command]  — [why: gap + potential score impact]
+  2. /[command]  — ...
+  3. /[command]  — ...
 ```
 
-Progress bar scale: each █ = 5 points (20 chars = 100 points).
+Progress bar: each █ = 5 points (20 chars = 100 points).
 ⚠ flags dimensions below 60.
-Omit comparison section if no previous assessment exists.
+Two-column layout separates technical/product from product/business visually.
 
 ---
 
 ## Step 5 — Save the report
 
-Write full report to `.d3/reports/assessment-TIMESTAMP.md`:
+Write to `.d3/reports/assessment-TIMESTAMP.md`:
 
 ```markdown
 # Project Assessment
@@ -254,21 +311,26 @@ Write full report to `.d3/reports/assessment-TIMESTAMP.md`:
 **Overall:** NN/100 [GRADE]
 
 ## Scores
-| Dimension | Score | Grade | Key gaps |
+| Dimension | Score | Grade | Key finding |
 |---|---|---|---|
-| Vision | N/100 | X | <one-line summary> |
-...
+| Vision | N/100 | X | <one-line> |
+| Code | N/100 | X | <one-line> |
+| Security | N/100 | X | |
+| Performance | N/100 | X | |
+| Documentation | N/100 | X | |
+| UX & Design | N/100 | X | |
+| Accessibility | N/100 | X | |
+| Product Completeness | N/100 | X | |
+| Process | N/100 | X | |
+| Business | N/100 | X | |
 
 ## Dimension detail
-### Vision — N/100
-[criterion-by-criterion breakdown]
-...
+[criterion-by-criterion breakdown for each]
 
 ## Historical
-| Date | Overall | Vision | Code | Security | Performance | Docs | UX | Accessibility | Process |
-|---|---|---|---|---|---|---|---|---|---|
-| YYYY-MM-DD | NN | NN | NN | NN | NN | NN | NN | NN | NN |
-[append from previous assessments if --compare]
+| Date | Overall | Vision | Code | Security | Perf | Docs | UX | A11y | Completeness | Process | Business |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| YYYY-MM-DD | NN | NN | NN | NN | NN | NN | NN | NN | NN | NN | NN |
 ```
 
 ---
@@ -277,12 +339,11 @@ Write full report to `.d3/reports/assessment-TIMESTAMP.md`:
 
 ```
 Assessment saved: .d3/reports/assessment-TIMESTAMP.md
+10 dimensions scored. Overall: NN/100 [GRADE]
 
-Improve your score:
-  /audit accessibility   — critical gap, never run
-  /test react            — establish performance baseline
-  /improve code          — coverage below threshold
-  /vision                — define strategic direction
+Top improvements:
+  /[command]  — [reason + score impact]
+  /[command]  — ...
 
-Track progress: run /evaluate again after each sprint to see trajectory.
+Run /evaluate --compare after next sprint to track trajectory.
 ```
