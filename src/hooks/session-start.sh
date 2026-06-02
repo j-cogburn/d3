@@ -149,6 +149,9 @@ echo "  accessibility: ${A11Y_DATE}"
 echo "  vision:        ${VISION_DATE}"
 echo "  code:          ${CODE_DATE}"
 echo ""
+if [ -n "$LAST_VENTURE" ]; then
+echo "Venture:    ${LAST_VENTURE}"
+fi
 if [ -n "$LAST_ASSESSMENT" ]; then
 echo "Assessment: ${LAST_ASSESSMENT}"
 fi
@@ -162,4 +165,13 @@ if [ -n "$LAST_ASSESSMENT_FILE" ]; then
   SCORE=$(grep -m1 '^\*\*Overall:' "$LAST_ASSESSMENT_FILE" 2>/dev/null | grep -o '[0-9]*/100' | head -1)
   ADATE=$(basename "$LAST_ASSESSMENT_FILE" | sed 's/assessment-//' | sed 's/-..\..*//' | sed 's/-[0-9]*$//')
   LAST_ASSESSMENT="${SCORE} (${ADATE})"
+fi
+
+# ── Last venture assessment ───────────────────────────────────────────────────
+LAST_VENTURE_FILE=$(ls -t .d3/reports/venture-*.md 2>/dev/null | head -1)
+LAST_VENTURE=""
+if [ -n "$LAST_VENTURE_FILE" ]; then
+  MARKET=$(grep -m1 '^\*\*Market score:' "$LAST_VENTURE_FILE" 2>/dev/null | grep -o '[0-9.]*\/10' | head -1)
+  VDATE=$(basename "$LAST_VENTURE_FILE" | sed 's/venture-//' | sed 's/-..\..*//' | sed 's/-[0-9]*$//')
+  LAST_VENTURE="${MARKET} (${VDATE})"
 fi

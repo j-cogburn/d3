@@ -41,6 +41,8 @@ SERVICES
   Python    UP / DOWN
 
 ASSESSMENT
+  Technical: <score>/100  (<date>)
+  Venture:   <market score>/10  (<date>)  (omit if never run)
   <last score and date — or "never run (/evaluate to baseline)">
 
 VISION
