@@ -25,33 +25,49 @@ Get timestamp: `date '+%Y-%m-%d-%H%M'`
 
 ---
 
-## Step 1 — Load context
+## Step 1 — Load context and skills
 
 Read:
 1. `CLAUDE.md` — services, tech stack, existing routes
 2. `docs/design/design-system.md` if present — existing components and patterns to reference
 3. Source material: the spec file, or use `$ARGUMENTS` as the description
 
+Invoke these skills before proceeding:
+- `information-architecture` from `.d3/skills/information-architecture/SKILL.md` — for navigation structure and content hierarchy decisions
+- `ux-writing` from `.d3/skills/ux-writing/SKILL.md` — for placeholder copy quality and content hierarchy
+- `wireframe` from `.d3/skills/wireframe/SKILL.md` — the core pattern library and conventions
+
 ---
 
-## Step 2 — Plan the screens
+## Step 2 — Plan navigation and IA first
 
-Before drawing, list what needs to be wireframed:
-- For a single page: one wireframe
-- For a flow: list each step/screen in order
-- For a spec: extract every distinct screen mentioned
+Using `information-architecture`, before drawing any screen:
+- Map where this page/flow sits in the overall navigation hierarchy
+- Confirm navigation labels match user vocabulary
+- Identify the page's position in the user journey (entry → action → exit)
+- List related pages that need navigation links or back-paths
+
+For flows: list each step in order. Identify what the user must carry between steps (context, data, decisions).
 
 For each screen, identify:
 - Primary action (the one thing users must be able to do)
 - Secondary content and actions
-- Navigation context (where does this sit in the app?)
 - Empty states and error states needed
+- Content that needs placeholder copy (use `ux-writing` principles: concrete, action-oriented, no generic "Lorem ipsum")
 
 ---
 
-## Step 3 — Invoke wireframe skill
+## Step 3 — Draw and self-critique
 
 Invoke `wireframe` from `.d3/skills/wireframe/SKILL.md`. Follow the process and use the pattern library defined there.
+
+After drawing each wireframe, apply a `design-critique` pass (`.d3/skills/design-critique/SKILL.md`):
+- Is there one clearly dominant element (primary action)?
+- Are related elements grouped by proximity (Gestalt)?
+- Does visual weight match functional importance?
+- Is the reading order (1st, 2nd, 3rd most important) unambiguous?
+
+If any critique issue is found, revise the wireframe before saving.
 
 Produce one wireframe per screen. Each wireframe must include:
 - The ASCII layout at the chosen viewport width

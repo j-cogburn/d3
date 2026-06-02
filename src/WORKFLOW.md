@@ -52,7 +52,7 @@ Each phase is a discrete command. The `/sprint` command runs all five in sequenc
 | `/spec [idea?]` | Requirements gathering. Interview mode, idea refinement, or GitHub issue → structured spec → feed into `/plan`. |
 | `/wireframe <page> [mobile\|tablet]` | ASCII wireframe for a page, flow, or spec. Saved to `.d3/wireframes/` with timestamped filenames. |
 | `/test [service?]` | Dedicated test pass. Runs all test suites, Playwright screenshots, reports failures. Use before `/release`. |
-| `/improve [scope?]` | Quality-only cycle: design · code · ux · or a feature area. Audit → plan → execute → verify, quality issues only. |
+| `/improve [scope?]` | Quality-only cycle. Scopes: `design` · `ux` · `accessibility` · `ia` · `copy` · `interactions` · `code` · feature area. Audit → plan → execute → verify. |
 | `/resolve <description>` | Instant fix. Describe the problem; a directive is created and executed immediately. |
 | `/retro` | Post-sprint retrospective. Reviews velocity, quality, blockers since last tag. Seeds next sprint focus. |
 | `/status` | One-screen project health snapshot. Services, git state, active directives, last audit date, recommended next action. |

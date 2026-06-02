@@ -162,21 +162,46 @@ Product surfaces against vision, roadmap fidelity, UX quality, design adherence,
 ## DIMENSION: design
 
 ### What it checks
-Design system adherence, visual consistency, component correctness, and accessibility baseline.
+Design system adherence, visual consistency, component correctness, visual hierarchy, and token implementation.
 
 ### Steps
 
-1. Read `.d3/docs/design/design-system.md` and `.d3/docs/design/design-system-v2.md` — these define the current standards.
-2. Read `.d3/docs/design/components.md` for component specs.
+1. Invoke these skills — read and follow each:
+   - `design-system` from `.d3/skills/design-system/SKILL.md` — token hierarchy, component anatomy, state coverage
+   - `design-critique` from `.d3/skills/design-critique/SKILL.md` — visual hierarchy, Gestalt, spacing, colour
+
+2. Read design documentation if present:
+   - `docs/design/design-system.md` — defined standards
+   - `docs/design/components.md` — component specs
+
 3. Screenshot all surfaces at **desktop (1440 × 900) and mobile (375 × 812)** viewports (reuse Playwright setup from product dimension if running together).
-4. Evaluate each surface against:
-   - Color tokens applied correctly (semantic vs decorative)?
-   - Typography: correct font, size, weight per role?
-   - Spacing consistent with the 4px base scale?
-   - Buttons, inputs, modals, empty states follow component specs?
-   - Accessibility: focus rings visible? Contrast passing?
-   - Any pages that look like they belong to a different product?
-5. Write findings to `.d3/reports/design-audit-TIMESTAMP.md`.
+
+4. Evaluate token implementation (using `design-system`):
+   - Are colour values using semantic tokens or hardcoded values?
+   - Does the typography scale match the defined system?
+   - Is spacing consistently on the base grid (multiples of 4px)?
+   - Do all interactive components have complete state coverage (hover, focus, disabled, loading)?
+   - Are component variants consistent across the product?
+
+5. Apply `design-critique` to each screen:
+   - Visual hierarchy: is there one dominant element per section?
+   - Gestalt: are related elements grouped by proximity? Are similar elements visually similar?
+   - Colour: does usage follow 60-30-10? Is semantic colour consistent (red = error only)?
+   - Spacing: consistent and on-grid throughout?
+   - Does any screen look like it belongs to a different product (inconsistent visual language)?
+
+6. Write findings to `.d3/reports/design-audit-TIMESTAMP.md`:
+   ```markdown
+   # Design Audit
+   **Date:** YYYY-MM-DD HH:MM
+
+   ## Token Implementation Issues [Critical / High / Medium / Low]
+   ## Component State Gaps
+   ## Visual Hierarchy Issues
+   ## Spacing Inconsistencies
+   ## Colour Usage Issues
+   ## Cross-screen Inconsistencies
+   ```
 
 ---
 
@@ -187,7 +212,12 @@ User experience quality against established usability principles. Evaluates task
 
 ### Steps
 
-1. Invoke `frontend-ui-engineering` from `.d3/skills/frontend-ui-engineering/SKILL.md`.
+1. Invoke these skills — read and follow each before evaluating:
+   - `frontend-ui-engineering` from `.d3/skills/frontend-ui-engineering/SKILL.md`
+   - `design-critique` from `.d3/skills/design-critique/SKILL.md` — visual hierarchy, Gestalt, reading patterns
+   - `information-architecture` from `.d3/skills/information-architecture/SKILL.md` — nav structure, labeling
+   - `ux-writing` from `.d3/skills/ux-writing/SKILL.md` — microcopy audit checklist
+   - `user-journey-mapping` from `.d3/skills/user-journey-mapping/SKILL.md` — map primary user flows
 
 2. Verify services are running:
    ```bash
@@ -198,7 +228,15 @@ User experience quality against established usability principles. Evaluates task
 
 3. Screenshot all surfaces at **three viewports**: desktop (1440 × 900), tablet (768 × 1024), mobile (375 × 812).
 
-4. Evaluate each surface against Nielsen's 10 Usability Heuristics:
+4. Map the primary user journey (using `user-journey-mapping`): identify the top 3 user goals and trace each through the current screens. Mark where friction or confusion occurs.
+
+5. Evaluate navigation and IA (using `information-architecture`):
+   - Do navigation labels match user vocabulary?
+   - Is every destination reachable in ≤3 clicks?
+   - Do page titles match the navigation labels that led to them?
+   - Are related items co-located?
+
+6. Evaluate each surface against Nielsen's 10 Usability Heuristics:
    1. **Visibility of system status** — does the user always know what's happening?
    2. **Match with real world** — does language and metaphor match user expectations?
    3. **User control and freedom** — can users undo, back out, or escape?
@@ -210,13 +248,19 @@ User experience quality against established usability principles. Evaluates task
    9. **Error recovery** — are error messages plain-language and actionable?
    10. **Help and documentation** — is help available without leaving the current task?
 
-5. Also evaluate:
-   - **Information scent** — do navigation labels and CTAs clearly signal their destination?
-   - **Task completion paths** — can users achieve primary goals without dead ends?
-   - **Cognitive load** — does any screen demand too much working memory?
-   - **Responsive degradation** — do layouts hold at tablet and mobile, or break?
+7. Apply `design-critique` visual hierarchy analysis to each screen:
+   - Is there exactly one dominant element per screen section?
+   - Does visual prominence match functional importance?
+   - Are related elements grouped by proximity?
+   - Does colour usage follow the 60-30-10 rule?
 
-6. Write report to `.d3/reports/ux-audit-TIMESTAMP.md`:
+8. Audit microcopy using `ux-writing` checklist:
+   - Are all error messages specific (what happened + how to fix)?
+   - Are all button labels verb + object (not "OK", "Submit", "Yes")?
+   - Do all empty states offer a path forward?
+   - Are any tooltips unhelpfully vague?
+
+9. Write report to `.d3/reports/ux-audit-TIMESTAMP.md`:
    ```markdown
    # UX Audit
    **Date:** YYYY-MM-DD HH:MM
@@ -224,11 +268,13 @@ User experience quality against established usability principles. Evaluates task
    **Surfaces reviewed:** N
 
    ## Executive Summary
+   ## User Journey Analysis [top 3 flows — friction points mapped]
    ## Heuristic Violations [Critical / High / Medium / Low]
+   ## Visual Hierarchy Issues [from design-critique]
+   ## Information Architecture Issues [nav labels, depth, grouping]
+   ## Microcopy Issues [errors, buttons, empty states]
    ## Responsive Issues [by breakpoint]
-   ## Task Flow Issues
-   ## Information Architecture Issues
-   ## Recommended Fixes [prioritised]
+   ## Recommended Fixes [prioritised by severity × frequency]
    ```
 
 7. Print: `Report written: .d3/reports/ux-audit-TIMESTAMP.md`

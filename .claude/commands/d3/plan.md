@@ -55,7 +55,17 @@ For each extracted item, draft:
 - **Description** — 2–3 sentences: what to build, why it matters, any constraint the agent needs
 - **Services** — Express · Python · React (list only what applies)
 - **Agent** — `general-purpose` (default), `Plan` (design-first), or `claude`
-- **Skills** — relevant skills from `.d3/skills/` (omit if none clearly apply). Common mappings: API work → `api-and-interface-design`; any implementation → `incremental-implementation`, `test-driven-development`; UI → `frontend-ui-engineering`; auth/input/integrations → `security-and-hardening`; perf → `performance-optimization`
+- **Skills** — relevant skills from `.d3/skills/` (omit if none clearly apply). Common mappings:
+  - API work → `api-and-interface-design`
+  - Any implementation → `incremental-implementation`, `test-driven-development`
+  - UI / frontend → `frontend-ui-engineering`, `interaction-design`
+  - New components or design system → `design-system`, `design-critique`
+  - Navigation / IA → `information-architecture`
+  - Buttons, forms, empty states, errors → `ux-writing`
+  - Flows, onboarding → `user-journey-mapping`, `ux-writing`
+  - Visual redesign → `design-critique`
+  - Auth / input / integrations → `security-and-hardening`
+  - Performance → `performance-optimization`
 - **Done when** — one primary, testable criterion plus a test gate for each service in scope:
   - Express: `npm test --prefix api-express` passes
   - Python: `api-python/.venv/bin/pytest api-python/tests/ -q` passes

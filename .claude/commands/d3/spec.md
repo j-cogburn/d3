@@ -49,7 +49,9 @@ Use the issue content as source material. Reference the issue number in the spec
 
 ## Step 3 — Structure the spec
 
-Invoke `spec-driven-development` from `.d3/skills/spec-driven-development/SKILL.md`.
+Invoke these skills:
+- `spec-driven-development` from `.d3/skills/spec-driven-development/SKILL.md`
+- If the spec involves UI/UX: also invoke `user-research-synthesis` (`.d3/skills/user-research-synthesis/SKILL.md`) to frame user stories as JTBD statements, and `user-journey-mapping` (`.d3/skills/user-journey-mapping/SKILL.md`) to map the flow before defining screens
 
 Write the spec in this format:
 
@@ -69,8 +71,12 @@ Write the spec in this format:
 **In:** <what this covers>
 **Out:** <what this explicitly does not cover — be specific>
 
-## User stories
+## User stories / JTBD
 - As a <user type>, I want <capability> so that <outcome>
+- When [situation], I want to [motivation], so I can [outcome]  ← prefer JTBD format
+
+## User journey (for UI-heavy specs)
+<Map the primary flow: entry → key steps → exit. Identify friction points and what happens if the user fails at each step.>
 
 ## Technical constraints
 <Known constraints: existing services, data models, APIs, auth, performance requirements>
@@ -98,6 +104,9 @@ Write to `.d3/docs/specs/spec-TIMESTAMP-<slug>.md` where slug is the title lower
 
 ```
 Spec written: .d3/docs/specs/spec-TIMESTAMP-<slug>.md
-
-Run /plan .d3/docs/specs/spec-TIMESTAMP-<slug>.md to convert this spec into directives.
 ```
+
+Ask (single-select):
+- "Run /wireframe to visualise the screens before planning"
+- "Run /plan to convert this spec into directives now"
+- "Done — I'll plan later"

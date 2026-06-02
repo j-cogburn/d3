@@ -24,7 +24,13 @@ The directive to add is: $ARGUMENTS
 5a. Suggest relevant skills from `.d3/skills/` based on the directive description. List only those that clearly apply — do not pad. Common mappings:
    - Building an API endpoint → `api-and-interface-design`
    - Any implementation work → `incremental-implementation`, `test-driven-development`
-   - UI / frontend work → `frontend-ui-engineering`
+   - UI / frontend work → `frontend-ui-engineering`, `interaction-design`
+   - New UI components or design system work → `design-system`, `design-critique`
+   - Navigation or IA changes → `information-architecture`
+   - Buttons, forms, empty states, error messages → `ux-writing`
+   - Multi-step flows or onboarding → `user-journey-mapping`, `ux-writing`
+   - Visual redesign or audit-driven design fixes → `design-critique`
+   - User research findings → `user-research-synthesis`
    - Auth, input handling, external integrations → `security-and-hardening`
    - Performance concerns → `performance-optimization`
    - Shipping / deploy → `shipping-and-launch`, `git-workflow-and-versioning`

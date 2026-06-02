@@ -21,7 +21,7 @@ A complete Claude Code workflow system for shipping software with AI agents. Dro
 | `/retro` | Post-sprint retrospective, seeds next sprint |
 | `/status` | One-screen project health snapshot |
 | `/resolve <description>` | Instant one-shot fix cycle |
-| `/improve [ux\|design\|code]` | Quality-only audit + fix cycle |
+| `/improve [ux\|design\|accessibility\|ia\|copy\|interactions\|code]` | Quality-only audit + fix cycle |
 | `/directive`, `/task` | Add work items to `.d3/TASKS.md` |
 | `/sync-docs` | Update all docs to reflect what shipped |
 
