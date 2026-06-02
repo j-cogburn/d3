@@ -149,6 +149,9 @@ echo "  accessibility: ${A11Y_DATE}"
 echo "  vision:        ${VISION_DATE}"
 echo "  code:          ${CODE_DATE}"
 echo ""
+if [ -n "$PROJECT_MEMORY" ]; then
+echo "Memory:     ${PROJECT_MEMORY}"
+fi
 if [ -n "$LAST_VENTURE" ]; then
 echo "Venture:    ${LAST_VENTURE}"
 fi
@@ -174,4 +177,11 @@ if [ -n "$LAST_VENTURE_FILE" ]; then
   MARKET=$(grep -m1 '^\*\*Market score:' "$LAST_VENTURE_FILE" 2>/dev/null | grep -o '[0-9.]*\/10' | head -1)
   VDATE=$(basename "$LAST_VENTURE_FILE" | sed 's/venture-//' | sed 's/-..\..*//' | sed 's/-[0-9]*$//')
   LAST_VENTURE="${MARKET} (${VDATE})"
+fi
+
+# ── Memory profile ────────────────────────────────────────────────────────────
+PROJECT_MEMORY=""
+if [ -f ".d3/memory.md" ]; then
+  # Extract the Identity line from the memory profile
+  PROJECT_MEMORY=$(awk '/^## Identity/{found=1; next} found && NF && !/^##/{print; exit}' .d3/memory.md 2>/dev/null)
 fi

@@ -264,6 +264,7 @@ function init() {
     ['.d3/TASKS.md',     'TASKS.md'],
     ['.d3/CHANGELOG.md', 'CHANGELOG.md'],
     ['.d3/vision.md',    'vision.md'],
+    ['.d3/memory.md',    'memory.md'],
   ]) {
     const dest = path.join(TARGET_DIR, rel);
     if (fs.existsSync(dest)) {
@@ -483,9 +484,10 @@ Migration complete.
   ⊘  CLAUDE.md — preserved
 
 Next steps:
-  1. Open Claude Code and run /guide to orient yourself with the new D3
+  1. Open Claude Code and run /bootstrap — scans the codebase, builds a memory
+     profile, populates D3 files from discovered work, and organises your docs
   2. Run /vision — define or refine your project vision
-  3. Run /gap — find what's missing from your product
+  3. Run /guide if you're new to D3
   4. Adapt .d3/hooks/ if you customised the old .claude/hooks/
 `);
 }
