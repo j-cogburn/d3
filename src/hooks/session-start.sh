@@ -100,7 +100,7 @@ elif [ "$LAST_CHANGELOG_DATE" = "$TODAY_DATE" ] && [ "$READY" -eq 0 ]; then
   # Shipped something today — verify and sync
   RECOMMENDED="/verify  (changes shipped today — confirm they work)"
 elif [ "$DOCS_DATE" = "never" ] && [ "$ACTIVE_OBJECTIVES" -eq 0 ]; then
-  RECOMMENDED="/objective  (no objectives defined — start here)"
+  RECOMMENDED="/guide  (new project — start here for a walkthrough)"
 elif [ "$DOCS_DATE" = "never" ]; then
   RECOMMENDED="/audit docs  (no docs audit on record)"
 elif [ "$UX_DATE" = "never" ]; then
