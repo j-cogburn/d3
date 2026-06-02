@@ -52,6 +52,7 @@ if [ "$ACTIVE_OBJECTIVES" -gt 0 ]; then
 fi
 
 # ── Skills ───────────────────────────────────────────────────────────────────
+LESSON_COUNT=$(ls .d3/docs/lessons/*.md 2>/dev/null | grep -v .gitkeep | wc -l | tr -d ' ')
 SKILL_COUNT=$(ls .d3/skills/ 2>/dev/null | wc -l | tr -d ' ')
 
 # ── Git state ─────────────────────────────────────────────────────────────────
@@ -129,6 +130,11 @@ echo "DIRECTIVES"
 echo "  Ready:       ${READY}  ${READY_IDS}"
 echo "  In-progress: ${IN_PROGRESS}"
 echo ""
+if [ "$LESSON_COUNT" -gt 0 ]; then
+echo "LESSONS"
+echo "  $LESSON_COUNT in .d3/docs/lessons/ — injected into agent briefs for relevant services"
+echo ""
+fi
 if [ "$SKILL_COUNT" -gt 0 ]; then
 echo "SKILLS"
 echo "  ${SKILL_COUNT} available in .d3/skills/"

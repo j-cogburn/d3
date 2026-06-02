@@ -170,12 +170,17 @@ Each call:
 As each agent completes, immediately:
 
 1. Find the PR number: `gh pr list --head <branch> --json number,url --jq '.[0]'`
-2. Update `.d3/TASKS.md` status: `**Status:** complete — PR #N · YYYY-MM-DD`
-3. Add entry to `.d3/CHANGELOG.md` under today's date heading:
+2. **Wait for CI to pass** before proceeding:
+   ```bash
+   gh pr checks <N> --watch   # blocks until all checks complete
+   ```
+   If any check fails: update status to `ci-failed — PR #N · YYYY-MM-DD`, skip this directive, continue to next. Do not add to CHANGELOG.
+3. Update `.d3/TASKS.md` status: `**Status:** complete — PR #N · YYYY-MM-DD`
+4. Add entry to `.d3/CHANGELOG.md` under today's date heading:
    ```
    - DIRECTIVE-NNN: <one-line summary>. (PR #N)
    ```
-4. Clean up worktree: `git worktree remove --force <path> 2>/dev/null || true && git worktree prune`
+5. Clean up worktree: `git worktree remove --force <path> 2>/dev/null || true && git worktree prune`
 
 ---
 
@@ -212,7 +217,11 @@ DIRECTIVE-NNN  PR #N  <title>
 ...
 ```
 
-Check CI on each: `gh pr checks <N>`. Exclude any with failing checks.
+CI already passed for each PR (waited in Step 7). Confirm final status:
+```bash
+gh pr checks <N> --json name,conclusion --jq '.[] | select(.conclusion=="failure") | .name'
+```
+Exclude any that failed since the wait (edge case: flaky tests).
 
 Ask merge strategy (single-select):
 - "Merge all passing PRs (squash)"

@@ -162,3 +162,41 @@ If "Create directives": for each failure category, create appropriately tagged d
 - Coverage gaps → `**Skills:** test-driven-development`
 - Security issues → `**Skills:** security-and-hardening`
 - Performance regressions → `**Skills:** performance-optimization`
+
+---
+
+## Step 8 — Mutation testing (opt-in)
+
+Mutation testing verifies that your tests actually catch bugs — not just that they pass. Coverage measures lines executed; mutation score measures bugs detected.
+
+Ask before running (it is slow — 10–30 minutes for a typical codebase):
+- "Run mutation testing? (~15 min — confirms test quality, not just coverage)"
+- "Skip mutation testing"
+
+If opted in:
+
+```bash
+# Express — Stryker
+npx --prefix /tmp/stryker-runner @stryker-mutator/stryker-cli run \
+  --configFile api-express/stryker.config.js 2>&1 \
+  || npx stryker run --rootDir api-express 2>&1
+
+# Python — mutmut
+cd api-python && .venv/bin/mutmut run --paths-to-mutate src/ 2>&1
+cd api-python && .venv/bin/mutmut results 2>&1
+```
+
+Interpret mutation score:
+- ≥ 85% — excellent: tests catch the vast majority of injected bugs
+- 70–84% — good: acceptable for most projects
+- 55–69% — low: flag specific modules for improved test coverage
+- < 55% — critical: tests pass but catch little; create directives to fix
+
+Report:
+```
+Mutation testing:
+  Express:  N% mutation score (N killed / N survived / N timeout)
+  Python:   N% mutation score
+```
+
+If < 70%, create a directive tagged `**Skills:** test-driven-development` identifying the specific modules with low mutation scores.

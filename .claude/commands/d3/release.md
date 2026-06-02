@@ -31,13 +31,42 @@ If there are uncommitted changes or unpushed commits, stop: "Push all changes to
 
 ---
 
-## Step 3 — Run tests
+## Step 3 — Migration safety check
+
+Invoke `migration-safety` from `.d3/skills/migration-safety/SKILL.md`.
+
+Identify all migration files added since the last tag:
+```bash
+git diff $(git describe --tags --abbrev=0 2>/dev/null)..HEAD --name-only \
+  | grep -iE 'migration|alembic/versions|schema\.(sql|prisma)'
+```
+
+If no migration files: skip to Step 4.
+
+For each migration file found:
+1. Read the file and scan for dangerous patterns (NOT NULL, DROP, type changes, mass UPDATE, UNIQUE constraints)
+2. Report each dangerous pattern with a risk assessment
+3. For each dangerous pattern, require explicit confirmation before proceeding:
+   ```
+   ⚠ MIGRATION RISK: <file>
+      <pattern> — <why it's risky>
+      Mitigation: <safe alternative>
+   
+   Confirm: proceed / abort release
+   ```
+4. Document rollback steps for this release using the template in the migration-safety skill
+
+If any migration is irreversible and no backup is confirmed, ask: "Has a database backup been taken? This migration cannot be rolled back."
+
+---
+
+## Step 4 — Run tests
 
 Run `/test` to confirm all services pass before tagging. If tests fail, stop: "Fix failing tests before releasing."
 
 ---
 
-## Step 4 — Staging health check
+## Step 5 — Staging health check
 
 Read `CLAUDE.md` for staging deployment URLs. Probe each staging service:
 
@@ -61,7 +90,7 @@ If any check fails, stop: "Fix staging before tagging production."
 
 ---
 
-## Step 5 — Generate release notes
+## Step 6 — Generate release notes
 
 Read `.d3/CHANGELOG.md`. Collect all entries since the last git tag:
 
@@ -85,7 +114,7 @@ Format as GitHub release notes:
 
 ---
 
-## Step 6 — Document rollback steps
+## Step 7 — Document rollback steps
 
 Before tagging, record the rollback procedure for this release:
 
@@ -100,7 +129,7 @@ Print this to the user. If there are irreversible DB migrations, ask to confirm 
 
 ---
 
-## Step 7 — Tag and release
+## Step 8 — Tag and release
 
 ```bash
 git tag v<version>
@@ -111,12 +140,12 @@ Create the GitHub release:
 ```bash
 gh release create v<version> \
   --title "v<version>" \
-  --notes "<release notes from Step 5>"
+  --notes "<release notes from Step 6>"
 ```
 
 ---
 
-## Step 8 — Monitor and verify production
+## Step 9 — Monitor and verify production
 
 ```bash
 gh run list --limit 5
@@ -131,11 +160,11 @@ curl -sf <EXPRESS_PROD_URL>/api/health && echo "Express OK" || echo "Express DOW
 
 2. Smoke-test production with Playwright: verify the same surfaces tested in staging load correctly in production. Check for console errors or failed requests.
 
-3. If anything fails: execute the rollback procedure documented in Step 6 and report.
+3. If anything fails: execute the rollback procedure documented in Step 7 and report.
 
 ---
 
-## Step 9 — Update CHANGELOG
+## Step 10 — Update CHANGELOG
 
 Add a release marker to `.d3/CHANGELOG.md`:
 
@@ -146,7 +175,7 @@ Add a release marker to `.d3/CHANGELOG.md`:
 
 ---
 
-## Step 10 — Report
+## Step 11 — Report
 
 ```
 RELEASE COMPLETE

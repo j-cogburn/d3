@@ -2,22 +2,22 @@
 /**
  * D3 Orchestrator — batch directive executor.
  *
- * Runs ready directives outside Claude's context window, eliminating context
- * accumulation for large sprints. Each directive gets an isolated git worktree
- * and a dedicated `claude --print` process. Adversarial review runs inside each
- * worker task and gates completion — critical findings move the directive to
- * `needs-review` rather than `complete`.
+ * Runs ready directives outside Claude's context window. Each directive gets
+ * an isolated git worktree and a dedicated `claude --print` process.
+ *
+ * Quality pipeline per directive:
+ *   1. Agent implements → opens PR
+ *   2. CI wait — polls gh pr checks until all pass (or marks ci-failed)
+ *   3. Adversarial review — code-review medium --comment
+ *      Critical findings → needs-review (not added to changelog)
+ *      Clean → complete (added to changelog)
+ *   4. Lessons — critical findings saved to .d3/docs/lessons/ for future agents
  *
  * Usage:
  *   node .d3/scripts/orchestrate.js                  # all ready directives
  *   node .d3/scripts/orchestrate.js DIRECTIVE-055    # single directive
  *   node .d3/scripts/orchestrate.js --dry-run        # preview without executing
  *   D3_CONCURRENCY=6 node .d3/scripts/orchestrate.js # override concurrency
- *
- * Requirements:
- *   - `claude` CLI in PATH, authenticated
- *   - `gh` CLI in PATH, authenticated (for PR creation by agents)
- *   - Git repo with a clean main branch
  */
 
 'use strict';
@@ -32,14 +32,16 @@ const TASKS_PATH     = path.join(D3_DIR, 'TASKS.md');
 const CHANGELOG_PATH = path.join(D3_DIR, 'CHANGELOG.md');
 const VISION_PATH    = path.join(D3_DIR, 'vision.md');
 const WORKTREES_DIR  = path.join(D3_DIR, 'worktrees');
+const LESSONS_DIR    = path.join(D3_DIR, 'docs', 'lessons');
 const MAX_CONCURRENT = parseInt(process.env.D3_CONCURRENCY || '4', 10);
 const TIMEOUT_MS     = parseInt(process.env.D3_TIMEOUT_MS  || String(15 * 60 * 1000), 10);
+const CI_TIMEOUT_MS  = parseInt(process.env.D3_CI_TIMEOUT_MS || String(20 * 60 * 1000), 10);
+const CI_POLL_MS     = 30 * 1000;
 
 const args    = process.argv.slice(2);
 const DRY_RUN = args.includes('--dry-run');
 const TARGET  = args.find(a => /^DIRECTIVE-\d+$/i.test(a));
 
-// Patterns that indicate critical findings in a code review
 const CRITICAL_PATTERNS = [
   /\bCritical\b/i,
   /\bsecurity\s+(?:vulnerability|issue|bug|flaw)\b/i,
@@ -75,6 +77,99 @@ function hasCriticalFindings(reviewOutput) {
   return CRITICAL_PATTERNS.some(p => p.test(reviewOutput));
 }
 
+// ── CI wait ───────────────────────────────────────────────────────────────────
+
+async function waitForCI(prNumber) {
+  const deadline = Date.now() + CI_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    const result = spawnSync(
+      'gh', ['pr', 'checks', String(prNumber), '--json', 'name,state,conclusion'],
+      { cwd: ROOT, encoding: 'utf8', timeout: 30000 }
+    );
+
+    if (result.status !== 0) {
+      // gh CLI error or no checks configured — treat as passed
+      return { passed: true, reason: 'no checks or gh error — proceeding' };
+    }
+
+    let checks;
+    try { checks = JSON.parse(result.stdout || '[]'); } catch { checks = []; }
+
+    if (checks.length === 0) {
+      return { passed: true, reason: 'no CI checks configured' };
+    }
+
+    const pending = checks.some(c =>
+      c.state === 'pending' || c.state === 'in_progress' ||
+      c.conclusion === null || c.conclusion === ''
+    );
+
+    if (!pending) {
+      const failed = checks.filter(c =>
+        c.conclusion === 'failure' || c.conclusion === 'cancelled' || c.conclusion === 'timed_out'
+      );
+      return {
+        passed: failed.length === 0,
+        reason: failed.length > 0
+          ? `CI failed: ${failed.map(c => c.name).join(', ')}`
+          : 'all checks passed',
+      };
+    }
+
+    await new Promise(r => setTimeout(r, CI_POLL_MS));
+  }
+
+  return { passed: false, reason: `CI timeout after ${CI_TIMEOUT_MS / 60000} minutes` };
+}
+
+// ── Agent lessons ─────────────────────────────────────────────────────────────
+
+function saveLesson(directive, prNumber, reviewOutput) {
+  fs.mkdirSync(LESSONS_DIR, { recursive: true });
+
+  const slug      = directive.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 30);
+  const ts        = new Date().toISOString().slice(0, 16).replace(/[T:]/g, '-');
+  const filename  = path.join(LESSONS_DIR, `lesson-${ts}-${slug}.md`);
+
+  const findingMatch = reviewOutput.match(/Critical[:\s]+([^\n]+)/i);
+  const finding = findingMatch ? findingMatch[1].trim() : reviewOutput.slice(0, 300);
+
+  fs.writeFileSync(filename, [
+    `# Lesson: ${directive.title}`,
+    `**Date:** ${today()}`,
+    `**Directive:** ${directive.id}`,
+    `**PR:** #${prNumber}`,
+    `**Services:** ${directive.services || 'unspecified'}`,
+    '',
+    '## Critical finding',
+    finding,
+    '',
+    '## Full review output',
+    reviewOutput.slice(0, 1500),
+    '',
+    '## Prevention',
+    '*(Add notes after manual review — what should future agents do differently?)*',
+  ].join('\n'));
+
+  return filename;
+}
+
+function readRelevantLessons(services) {
+  if (!fs.existsSync(LESSONS_DIR)) return null;
+  const files = fs.readdirSync(LESSONS_DIR).filter(f => f.endsWith('.md') && f !== '.gitkeep');
+  if (files.length === 0) return null;
+
+  const serviceList = (services || '').split(',').map(s => s.trim()).filter(Boolean);
+
+  const relevant = files
+    .map(f => fs.readFileSync(path.join(LESSONS_DIR, f), 'utf8'))
+    .filter(content => serviceList.length === 0 || serviceList.some(s => content.includes(s)))
+    .slice(-3); // last 3 relevant lessons
+
+  return relevant.length > 0 ? relevant.join('\n\n---\n\n') : null;
+}
+
 // ── TASKS.md parser ───────────────────────────────────────────────────────────
 
 function parseReadyDirectives(content) {
@@ -106,12 +201,7 @@ function parseReadyDirectives(content) {
 // ── Brief construction ────────────────────────────────────────────────────────
 
 function readServiceContext(services) {
-  const map = {
-    Express: 'api-express/CLAUDE.md',
-    Python:  'api-python/CLAUDE.md',
-    React:   'client/CLAUDE.md',
-  };
-
+  const map = { Express: 'api-express/CLAUDE.md', Python: 'api-python/CLAUDE.md', React: 'client/CLAUDE.md' };
   return Object.entries(map)
     .filter(([name]) => services.includes(name))
     .map(([name, rel]) => {
@@ -125,8 +215,7 @@ function readServiceContext(services) {
 
 function readVisionContext() {
   if (!fs.existsSync(VISION_PATH)) return null;
-  const content = fs.readFileSync(VISION_PATH, 'utf8');
-  // Extract vision sentence, anti-goals, and decision principles
+  const content    = fs.readFileSync(VISION_PATH, 'utf8');
   const vision     = content.match(/^## Vision\n([^\n#]+)/m)?.[1]?.trim();
   const antiGoals  = content.match(/## Anti-goals\n([\s\S]*?)(?=\n##|$)/)?.[1]?.trim();
   const principles = content.match(/## Decision principles\n([\s\S]*?)(?=\n##|$)/)?.[1]?.trim();
@@ -151,6 +240,7 @@ function buildBrief(directive) {
   const serviceContext = readServiceContext(directive.services);
   const visionContext  = readVisionContext();
   const specContext    = readSpecContext(directive.spec);
+  const lessonsContext = readRelevantLessons(directive.services);
 
   const skillsSection = directive.skills
     ? directive.skills.split(',').map(s => s.trim()).filter(Boolean).map(skill => {
@@ -174,6 +264,16 @@ function buildBrief(directive) {
 
   if (visionContext) {
     sections.push('## Project vision', visionContext, '');
+  }
+
+  if (lessonsContext) {
+    sections.push(
+      '## Lessons from previous reviews',
+      '*(Critical findings caught in past directives for these services — avoid repeating these mistakes)*',
+      '',
+      lessonsContext,
+      '',
+    );
   }
 
   sections.push(
@@ -313,14 +413,12 @@ function appendChangelog(directive, pr) {
 async function pool(fns, limit) {
   const results = new Array(fns.length);
   let next = 0;
-
   async function worker() {
     while (next < fns.length) {
       const i = next++;
       results[i] = await fns[i]();
     }
   }
-
   await Promise.all(Array.from({ length: Math.min(limit, fns.length) }, worker));
   return results;
 }
@@ -328,8 +426,8 @@ async function pool(fns, limit) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 async function main() {
-  try { run('which claude'); } catch { die('`claude` not found in PATH — install with: npm install -g @anthropic-ai/claude-code'); }
-  try { run('which gh');     } catch { die('`gh` not found in PATH — install GitHub CLI'); }
+  try { run('which claude'); } catch { die('`claude` not found in PATH'); }
+  try { run('which gh');     } catch { die('`gh` not found in PATH'); }
 
   const directives = parseReadyDirectives(fs.readFileSync(TASKS_PATH, 'utf8'));
 
@@ -340,7 +438,7 @@ async function main() {
 
   console.log('\nD3 ORCHESTRATOR');
   console.log('================');
-  console.log(`Directives: ${directives.length}  |  Concurrency: ${MAX_CONCURRENT}  |  Timeout: ${TIMEOUT_MS / 60000}m  |  Dry-run: ${DRY_RUN}`);
+  console.log(`Directives: ${directives.length}  |  Concurrency: ${MAX_CONCURRENT}  |  Agent timeout: ${TIMEOUT_MS / 60000}m  |  CI timeout: ${CI_TIMEOUT_MS / 60000}m  |  Dry-run: ${DRY_RUN}`);
   console.log('');
   for (const d of directives) {
     console.log(`  ${d.id}  ${d.title}`);
@@ -370,63 +468,82 @@ async function main() {
       const result = await runAgent(directive, worktree);
 
       if (result.ok && result.pr) {
-        // ── Adversarial review gates completion ──────────────────────────────
-        console.log(`[${directive.id}] PR #${result.pr} — running adversarial review...`);
+        // ── Step 1: Wait for CI ───────────────────────────────────────────────
+        console.log(`[${directive.id}] PR #${result.pr} — waiting for CI (up to ${CI_TIMEOUT_MS / 60000}m)...`);
+        const ci = await waitForCI(result.pr);
+
+        if (!ci.passed) {
+          console.log(`[${directive.id}] ✗  CI failed — ${ci.reason}`);
+          updateTasksStatus(directive.id, `ci-failed — PR #${result.pr} · ${today()}`);
+          removeWorktree(worktree);
+          return { ...result, ci, worktree: null, critical: false };
+        }
+
+        console.log(`[${directive.id}] CI ✓ — ${ci.reason}`);
+
+        // ── Step 2: Adversarial review gates completion ───────────────────────
+        console.log(`[${directive.id}] Running adversarial review...`);
         const { output: reviewOutput, critical } = reviewPR(worktree);
 
         if (critical) {
-          console.log(`[${directive.id}] ⚠  Critical findings — flagged for manual review (PR #${result.pr})`);
-          console.log(`[${directive.id}]    Review output:\n${reviewOutput.slice(0, 500)}`);
+          console.log(`[${directive.id}] ⚠  Critical findings — flagged for manual review`);
           updateTasksStatus(directive.id, `needs-review — PR #${result.pr} · ${today()}`);
-          // Not added to changelog until human reviews and merges
+          // ── Save lesson from critical finding ─────────────────────────────
+          const lessonPath = saveLesson(directive, result.pr, reviewOutput);
+          console.log(`[${directive.id}]    Lesson saved: ${path.relative(ROOT, lessonPath)}`);
         } else {
-          console.log(`[${directive.id}] ✓  PR #${result.pr} — review clean`);
+          console.log(`[${directive.id}] ✓  PR #${result.pr} — CI passed, review clean`);
           updateTasksStatus(directive.id, `complete — PR #${result.pr} · ${today()}`);
           appendChangelog(directive, result.pr);
         }
 
         removeWorktree(worktree);
-        return { ...result, reviewOutput, critical, worktree: null };
+        return { ...result, ci, reviewOutput, critical, worktree: null };
       } else {
         console.log(`[${directive.id}] ✗  ${result.reason}${result.pr ? '' : ' (no PR detected)'}`);
         updateTasksStatus(directive.id, 'ready');
         removeWorktree(worktree);
-        return { ...result, worktree: null };
+        return { ...result, ci: null, worktree: null };
       }
     } catch (err) {
       if (worktree) removeWorktree(worktree);
       updateTasksStatus(directive.id, 'ready');
-      return { directive, ok: false, reason: err.message, pr: null, worktree: null };
+      return { directive, ok: false, reason: err.message, pr: null, ci: null, worktree: null };
     }
   });
 
-  const results = await pool(tasks, MAX_CONCURRENT);
-
-  const passed      = results.filter(r => r.ok && r.pr && !r.critical);
-  const flagged     = results.filter(r => r.ok && r.pr && r.critical);
-  const failed      = results.filter(r => !r.ok || !r.pr);
+  const results  = await pool(tasks, MAX_CONCURRENT);
+  const passed   = results.filter(r => r.ok && r.pr && !r.critical && r.ci?.passed !== false);
+  const ciFailed = results.filter(r => r.ci && !r.ci.passed);
+  const flagged  = results.filter(r => r.ok && r.pr && r.critical);
+  const failed   = results.filter(r => !r.ok || !r.pr);
 
   console.log('\nORCHESTRATION COMPLETE');
   console.log('======================');
-  console.log(`Directives run:     ${results.length}`);
-  console.log(`PRs merged (ready): ${passed.length}`);
-  console.log(`Needs review:       ${flagged.length}`);
-  console.log(`Failed / no PR:     ${failed.length}`);
+  console.log(`Directives run:       ${results.length}`);
+  console.log(`CI passed + reviewed: ${passed.length}`);
+  console.log(`CI failed:            ${ciFailed.length}`);
+  console.log(`Needs manual review:  ${flagged.length}`);
+  console.log(`Failed / no PR:       ${failed.length}`);
 
   if (passed.length > 0) {
-    console.log('\nSucceeded (adversarial review clean):');
+    console.log('\nSucceeded (CI ✓, review clean):');
     for (const r of passed) console.log(`  ${r.directive.id} — ${r.directive.title}  (PR #${r.pr})`);
   }
+  if (ciFailed.length > 0) {
+    console.log('\nCI failed (fix and re-run):');
+    for (const r of ciFailed) console.log(`  ${r.directive.id} — ${r.directive.title}  (PR #${r.pr}: ${r.ci.reason})`);
+  }
   if (flagged.length > 0) {
-    console.log('\nNeeds manual review (critical findings):');
+    console.log('\nNeeds manual review (critical findings — lesson saved):');
     for (const r of flagged) console.log(`  ${r.directive.id} — ${r.directive.title}  (PR #${r.pr})`);
   }
   if (failed.length > 0) {
-    console.log('\nFailed (review manually):');
+    console.log('\nFailed:');
     for (const r of failed) console.log(`  ${r.directive.id} — ${r.directive.title}  (${r.reason})`);
   }
 
-  console.log('\nNext: merge PRs with /execute, then /sync-docs');
+  console.log('\nNext: merge passing PRs with /execute, then /sync-docs');
 }
 
 main().catch(err => { console.error('Orchestrator error:', err.message); process.exit(1); });
