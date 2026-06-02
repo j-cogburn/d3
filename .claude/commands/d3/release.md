@@ -1,8 +1,10 @@
-Cut a production release. Verifies staging, generates release notes from CHANGELOG, tags the version, and triggers the production deploy.
+Cut a production release. Verifies staging, runs tests, generates release notes, tags the version, verifies post-deploy, and documents rollback steps.
 
 **Usage:**
 - `/release 1.2.0` — cut a specific version
 - `/release` — determine next version from git tags and prompt for confirmation
+
+Invoke `shipping-and-launch` from `.d3/skills/shipping-and-launch/SKILL.md` throughout this process.
 
 ---
 
@@ -12,7 +14,7 @@ If `$ARGUMENTS` is empty:
 ```bash
 git tag --sort=-version:refname | head -5
 ```
-Suggest the next patch/minor version based on recent CHANGELOG entries. Ask the user to confirm the version before proceeding.
+Suggest the next patch/minor version based on recent CHANGELOG entries. Ask the user to confirm before proceeding.
 
 If `$ARGUMENTS` provides a version, use it directly.
 
@@ -29,26 +31,31 @@ If there are uncommitted changes or unpushed commits, stop: "Push all changes to
 
 ---
 
-## Step 3 — Staging health check
+## Step 3 — Run tests
 
-Read `CLAUDE.md` for staging deployment URLs. Then probe each staging service:
+Run `/test` to confirm all services pass before tagging. If tests fail, stop: "Fix failing tests before releasing."
+
+---
+
+## Step 4 — Staging health check
+
+Read `CLAUDE.md` for staging deployment URLs. Probe each staging service:
 
 ```bash
-# Replace with actual staging URLs from CLAUDE.md
 curl -sf <EXPRESS_STAGING_URL>/api/health && echo "Express OK" || echo "Express DOWN"
 curl -sf <PYTHON_STAGING_URL>/health && echo "Python OK" || echo "Python DOWN"
 curl -sf -o /dev/null -w "%{http_code}" <CLIENT_STAGING_URL>
 ```
 
-Also smoke-test the staging client with Playwright (landing + login render without errors).
+Smoke-test staging with Playwright: landing page and login render without errors, no console errors.
 
 If any check fails, stop: "Fix staging before tagging production."
 
 ---
 
-## Step 4 — Generate release notes
+## Step 5 — Generate release notes
 
-Read `CHANGELOG.md`. Collect all entries since the last git tag:
+Read `.d3/CHANGELOG.md`. Collect all entries since the last git tag:
 
 ```bash
 git log $(git describe --tags --abbrev=0 2>/dev/null || echo "")..HEAD --oneline 2>/dev/null
@@ -70,35 +77,68 @@ Format as GitHub release notes:
 
 ---
 
-## Step 5 — Create the release
+## Step 6 — Document rollback steps
+
+Before tagging, record the rollback procedure for this release:
+
+```
+Rollback for vX.Y.Z:
+  Previous tag: vX.Y.Z-1
+  To roll back: git revert v<version> or redeploy from <previous-tag>
+  DB migrations: <list any irreversible schema changes — if none, say "none">
+```
+
+Print this to the user. If there are irreversible DB migrations, ask to confirm before proceeding.
+
+---
+
+## Step 7 — Tag and release
 
 ```bash
 git tag v<version>
 git push origin v<version>
 ```
 
-Then create the GitHub release:
+Create the GitHub release:
 ```bash
 gh release create v<version> \
   --title "v<version>" \
-  --notes "<release notes from Step 4>"
+  --notes "<release notes from Step 5>"
 ```
 
 ---
 
-## Step 6 — Monitor production deploy
-
-Read `CLAUDE.md` for the CI/CD pipeline details. After the tag is pushed, the production deploy workflow should trigger automatically.
+## Step 8 — Monitor and verify production
 
 ```bash
 gh run list --limit 5
 ```
 
-Watch for the deploy to complete. Once done, probe production health endpoints (if documented in CLAUDE.md).
+Watch for the deploy workflow to complete. Once done:
+
+1. Probe production health endpoints (from `CLAUDE.md`):
+```bash
+curl -sf <EXPRESS_PROD_URL>/api/health && echo "Express OK" || echo "Express DOWN"
+```
+
+2. Smoke-test production with Playwright: verify the same surfaces tested in staging load correctly in production. Check for console errors or failed requests.
+
+3. If anything fails: execute the rollback procedure documented in Step 6 and report.
 
 ---
 
-## Step 7 — Report
+## Step 9 — Update CHANGELOG
+
+Add a release marker to `.d3/CHANGELOG.md`:
+
+```markdown
+## v<version> — YYYY-MM-DD
+<!-- entries already listed above; this marks the release boundary -->
+```
+
+---
+
+## Step 10 — Report
 
 ```
 RELEASE COMPLETE
@@ -106,7 +146,9 @@ RELEASE COMPLETE
 Version:    v<version>
 Tag:        pushed to origin
 GitHub:     <release URL>
-Production: UP / deploying (check in N minutes)
+Tests:      all passing
+Production: UP / verified
+Rollback:   v<previous-version> (no irreversible migrations / see note)
 
 Changes in this release:
   <summary of CHANGELOG entries since last tag>

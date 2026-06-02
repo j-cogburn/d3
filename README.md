@@ -10,15 +10,18 @@ A complete Claude Code workflow system for shipping software with AI agents. Dro
 
 | Command | Purpose |
 |---|---|
+| `/spec [idea\|#issue]` | Requirements gathering → structured spec → feeds `/plan` |
 | `/sprint` | Full cycle: audit → plan → execute → verify → sync-docs |
 | `/audit [docs\|product\|design\|vision\|code]` | Find problems across five dimensions |
-| `/plan [report\|#issue\|text]` | Extract directives from findings or a GitHub issue |
+| `/plan [report\|#issue\|text]` | Extract directives from findings, spec, or GitHub issue |
 | `/execute [DIRECTIVE-NNN]` | Spawn agents in parallel, merge PRs, archive |
+| `/test [service\|area]` | Run test suites + Playwright, report failures |
+| `/release [version]` | Tests → staging → tag → post-deploy verify → rollback docs |
+| `/retro` | Post-sprint retrospective, seeds next sprint |
 | `/status` | One-screen project health snapshot |
 | `/resolve <description>` | Instant one-shot fix cycle |
 | `/improve [ux\|design\|code]` | Quality-only audit + fix cycle |
 | `/directive`, `/task` | Add work items to `.d3/TASKS.md` |
-| `/release [version]` | Tag and ship a production release |
 | `/sync-docs` | Update all docs to reflect what shipped |
 
 **`src/hooks/`** — enforcement layer (installed to `.d3/hooks/`):

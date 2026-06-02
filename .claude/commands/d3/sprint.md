@@ -12,16 +12,21 @@ This command orchestrates existing commands in sequence. Run each phase as instr
 
 ## Phase 0 — Status check
 
-Before anything else, read `TASKS.md` and `CHANGELOG.md`. Print a brief orientation:
+Before anything else, read `.d3/TASKS.md` and `.d3/CHANGELOG.md`. Print a brief orientation:
 
 ```
 SPRINT START
 =============
 Active directives:  N (IDs)
 Ready directives:   N (IDs)
-Last merge:         <date and PR from CHANGELOG>
-Last audit:         <date from most recent reports/*.md or "never">
+Last merge:         <date and PR from .d3/CHANGELOG.md>
+Last audit:         <date from most recent .d3/reports/*.md or "never">
 ```
+
+If there are zero ready directives AND no recent audit, ask:
+- "Run /spec to capture requirements before auditing"
+- "Run /audit to find what needs fixing"
+- "Continue anyway"
 
 ---
 
@@ -41,7 +46,7 @@ If the audit produces no findings (everything is clean), print that and ask:
 
 Run `/plan [most recent audit report]`.
 
-Present proposals, wait for user selection, write chosen directives to TASKS.md.
+Present proposals, wait for user selection, write chosen directives to `.d3/TASKS.md`.
 
 If no proposals are selected or no audit findings existed, skip to Phase 3.
 
@@ -88,7 +93,7 @@ SPRINT COMPLETE
 ================
 Date:               YYYY-MM-DD
 Directives merged:  N (IDs and PR numbers)
-Audit report:       reports/<type>-TIMESTAMP.md
+Audit report:       .d3/reports/<type>-TIMESTAMP.md
 Docs updated:       yes/no
 
 What shipped:
@@ -96,7 +101,7 @@ What shipped:
   ...
 
 Recommended next sprint:
-  <1-2 sentence suggestion based on what's still open in TASKS.md and what the audit flagged>
+  <1-2 sentence suggestion based on what's still open in .d3/TASKS.md and what the audit flagged>
 ```
 
 ---
@@ -105,10 +110,10 @@ Recommended next sprint:
 
 This command works on any project that follows the D3 conventions:
 - `CLAUDE.md` — project context
-- `TASKS.md` — directives and tasks backlog
-- `CHANGELOG.md` — shipped work log
-- `docs/` — project documentation
-- `reports/` — audit output directory
+- `.d3/TASKS.md` — directives and tasks backlog
+- `.d3/CHANGELOG.md` — shipped work log
+- `.d3/docs/` — project documentation
+- `.d3/reports/` — audit output directory
 
 ---
 

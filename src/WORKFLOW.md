@@ -49,16 +49,19 @@ Each phase is a discrete command. The `/sprint` command runs all five in sequenc
 
 | Command | Purpose |
 |---|---|
+| `/spec [idea?]` | Requirements gathering. Interview mode, idea refinement, or GitHub issue → structured spec → feed into `/plan`. |
+| `/test [service?]` | Dedicated test pass. Runs all test suites, Playwright screenshots, reports failures. Use before `/release`. |
 | `/improve [scope?]` | Quality-only cycle: design · code · ux · or a feature area. Audit → plan → execute → verify, quality issues only. |
 | `/resolve <description>` | Instant fix. Describe the problem; a directive is created and executed immediately. |
+| `/retro` | Post-sprint retrospective. Reviews velocity, quality, blockers since last tag. Seeds next sprint focus. |
 | `/status` | One-screen project health snapshot. Services, git state, active directives, last audit date, recommended next action. |
-| `/release [version?]` | Staging health check → release notes from CHANGELOG → git tag → GitHub release. |
+| `/release [version?]` | Tests → staging check → release notes → git tag → post-deploy verification → rollback docs. |
 
 ### Primitive Commands
 
 | Command | Purpose |
 |---|---|
-| `/directive <description>` | Add a single owner-declared directive to TASKS.md. |
+| `/directive <description>` | Add a single owner-declared directive to `.d3/TASKS.md`. |
 | `/task <description>` | Add a task to the appropriate phase in the backlog. |
 | `/project:start` | Start all local development services (project-specific). |
 | `/update-config` | Modify `.claude/settings.json` (hooks, permissions, env vars). |
