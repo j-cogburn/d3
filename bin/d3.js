@@ -78,10 +78,11 @@ function init() {
 
   // D3 system files — skip if present (use `d3 update` to refresh)
   const systemFiles = [
-    { rel: '.d3/hooks',           src: path.join(PKG_DIR, 'src', 'hooks'),      kind: 'dir'  },
-    { rel: '.d3/scripts',         src: path.join(PKG_DIR, 'src', 'scripts'),    kind: 'dir'  },
-    { rel: '.d3/WORKFLOW.md',     src: path.join(PKG_DIR, 'src', 'WORKFLOW.md'), kind: 'file' },
-    { rel: '.claude/commands/d3', src: path.join(PKG_DIR, '.claude', 'commands', 'd3'), kind: 'dir' },
+    { rel: '.d3/hooks',           src: path.join(PKG_DIR, 'src', 'hooks'),               kind: 'dir'  },
+    { rel: '.d3/scripts',         src: path.join(PKG_DIR, 'src', 'scripts'),             kind: 'dir'  },
+    { rel: '.d3/skills',          src: path.join(PKG_DIR, 'src', 'skills'),              kind: 'dir'  },
+    { rel: '.d3/WORKFLOW.md',     src: path.join(PKG_DIR, 'src', 'WORKFLOW.md'),         kind: 'file' },
+    { rel: '.claude/commands/d3', src: path.join(PKG_DIR, '.claude', 'commands', 'd3'),  kind: 'dir'  },
   ];
 
   for (const { rel, src, kind } of systemFiles) {
@@ -143,10 +144,11 @@ function update() {
   const log = [];
 
   const systemFiles = [
-    { rel: '.d3/hooks',           src: path.join(PKG_DIR, 'src', 'hooks'),       kind: 'dir'  },
-    { rel: '.d3/scripts',         src: path.join(PKG_DIR, 'src', 'scripts'),     kind: 'dir'  },
-    { rel: '.d3/WORKFLOW.md',     src: path.join(PKG_DIR, 'src', 'WORKFLOW.md'), kind: 'file' },
-    { rel: '.claude/commands/d3', src: path.join(PKG_DIR, '.claude', 'commands', 'd3'), kind: 'dir' },
+    { rel: '.d3/hooks',           src: path.join(PKG_DIR, 'src', 'hooks'),               kind: 'dir'  },
+    { rel: '.d3/scripts',         src: path.join(PKG_DIR, 'src', 'scripts'),             kind: 'dir'  },
+    { rel: '.d3/skills',          src: path.join(PKG_DIR, 'src', 'skills'),              kind: 'dir'  },
+    { rel: '.d3/WORKFLOW.md',     src: path.join(PKG_DIR, 'src', 'WORKFLOW.md'),         kind: 'file' },
+    { rel: '.claude/commands/d3', src: path.join(PKG_DIR, '.claude', 'commands', 'd3'),  kind: 'dir'  },
   ];
 
   for (const { rel, src, kind } of systemFiles) {

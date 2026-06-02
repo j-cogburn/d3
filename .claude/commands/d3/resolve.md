@@ -9,7 +9,7 @@ Targeted one-shot fix. Given a description of a problem, creates a single direct
 
 ## Step 1 — Understand the problem
 
-Parse `$ARGUMENTS`. If it's a DIRECTIVE-NNN ID, read that directive from TASKS.md and proceed directly to Step 3.
+Parse `$ARGUMENTS`. If it's a DIRECTIVE-NNN ID, read that directive from `.d3/TASKS.md` and proceed directly to Step 3.
 
 Otherwise, read `CLAUDE.md` and any relevant service-level CLAUDE.md for context. Then:
 
@@ -21,7 +21,7 @@ Otherwise, read `CLAUDE.md` and any relevant service-level CLAUDE.md for context
 
 ## Step 2 — Create the directive
 
-Assign the next available DIRECTIVE-NNN ID from TASKS.md.
+Assign the next available DIRECTIVE-NNN ID from `.d3/TASKS.md`.
 
 Insert a directive block at the top of the active DIRECTIVES section:
 
@@ -30,6 +30,7 @@ Insert a directive block at the top of the active DIRECTIVES section:
 **Status:** ready
 **Agent:** general-purpose
 **Services:** <services>
+**Skills:** <1-2 most relevant skills — omit line if none clearly apply>
 **Added:** YYYY-MM-DD
 
 <Problem restatement + what the fix should do + any constraints the agent needs.>
@@ -73,8 +74,8 @@ Screenshot the affected surface(s) and confirm the problem is resolved. If the f
 
 ## Step 6 — Update records
 
-1. Update TASKS.md: `**Status:** complete — PR #N · YYYY-MM-DD`
-2. Add CHANGELOG.md entry.
+1. Update `.d3/TASKS.md`: `**Status:** complete — PR #N · YYYY-MM-DD`
+2. Add `.d3/CHANGELOG.md` entry.
 3. Archive the directive (move to ARCHIVED DIRECTIVES section).
 
 ---

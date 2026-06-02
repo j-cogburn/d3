@@ -22,6 +22,7 @@ and the current implementation status (what's live vs. roadmap).]
 │   ├── docs/
 │   │   ├── current/    As-built documentation
 │   │   └── roadmap/    Forward-looking plans
+│   ├── skills/         23 engineering skills (api-design, tdd, security, ...)
 │   ├── TASKS.md        Task backlog + directives — orchestrator-owned
 │   ├── CHANGELOG.md    Shipped work log — one entry per merged PR
 │   ├── WORKFLOW.md     D3 operating manual

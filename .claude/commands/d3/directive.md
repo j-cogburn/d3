@@ -1,10 +1,10 @@
-Add a new directive to the DIRECTIVES section of TASKS.md.
+Add a new directive to the DIRECTIVES section of `.d3/TASKS.md`.
 
 The directive to add is: $ARGUMENTS
 
 ## Steps
 
-1. Read TASKS.md.
+1. Read `.d3/TASKS.md`.
 
 2. Count existing `DIRECTIVE-NNN` entries to determine the next ID. If none exist, start at `DIRECTIVE-001`.
 
@@ -21,6 +21,15 @@ The directive to add is: $ARGUMENTS
 
 5. Infer which services are involved from the description. List only those that apply: `Express`, `Python`, `React`. If it's unclear, list all three.
 
+5a. Suggest relevant skills from `.d3/skills/` based on the directive description. List only those that clearly apply — do not pad. Common mappings:
+   - Building an API endpoint → `api-and-interface-design`
+   - Any implementation work → `incremental-implementation`, `test-driven-development`
+   - UI / frontend work → `frontend-ui-engineering`
+   - Auth, input handling, external integrations → `security-and-hardening`
+   - Performance concerns → `performance-optimization`
+   - Shipping / deploy → `shipping-and-launch`, `git-workflow-and-versioning`
+   - Omit the `**Skills:**` line entirely if no skills clearly apply.
+
 6. Insert the following block immediately after the DIRECTIVES section header line (the line containing `## DIRECTIVES`) and its italicised note, before any existing directives or the next `---` separator:
 
 ```
@@ -28,6 +37,7 @@ The directive to add is: $ARGUMENTS
 **Status:** ready
 **Agent:** <agent-type>
 **Services:** <services>
+**Skills:** <comma-separated skill names — omit line if none apply>
 **Added:** YYYY-MM-DD
 
 <description as a clear imperative — what to do and why it matters.>

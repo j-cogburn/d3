@@ -19,7 +19,7 @@ Each phase is a discrete command. The `/sprint` command runs all five in sequenc
 ```
 /sprint [scope]
   │
-  ├─ /audit [scope]      Find problems. Write timestamped report to reports/.
+  ├─ /audit [scope]      Find problems. Write timestamped report to .d3/reports/.
   │
   ├─ /plan [report]      Extract directives from findings. User selects which to add.
   │
@@ -39,11 +39,11 @@ Each phase is a discrete command. The `/sprint` command runs all five in sequenc
 | Command | Purpose |
 |---|---|
 | `/sprint [scope?]` | Full cycle. Scope: a feature area, phase name, or empty for full product. |
-| `/audit [scope?]` | Comprehensive audit. Scope: `docs` · `product` · `design` · `vision` · `code` · empty for all. Writes timestamped report to `reports/`. |
-| `/plan [source?]` | Extract directives from an audit report, section, inline description, or GitHub issue (`/plan #42`). Presents proposals; user selects before TASKS.md is touched. |
+| `/audit [scope?]` | Comprehensive audit. Scope: `docs` · `product` · `design` · `vision` · `code` · empty for all. Writes timestamped report to `.d3/reports/`. |
+| `/plan [source?]` | Extract directives from an audit report, section, inline description, or GitHub issue (`/plan #42`). Presents proposals; user selects before `.d3/TASKS.md` is touched. |
 | `/execute [id?]` | Run all ready directives in parallel. Pass a DIRECTIVE-NNN ID to run one. Includes merge, sync, archive. |
 | `/verify [scope?]` | Confirm the app works. Screenshots changed surfaces. |
-| `/sync-docs` | Update `docs/current/`, service `CLAUDE.md` files, and root `CLAUDE.md` to match current code. |
+| `/sync-docs` | Update `.d3/docs/current/`, service `CLAUDE.md` files, and root `CLAUDE.md` to match current code. |
 
 ### Action Commands
 
@@ -74,6 +74,7 @@ The directive is the atomic unit of work. Everything flows through it.
 **Status:** ready | in-progress — branch: feature/... | complete — PR #N · YYYY-MM-DD
 **Agent:** general-purpose | Plan | claude
 **Services:** Express · Python · React (only applicable)
+**Skills:** api-and-interface-design, test-driven-development (optional — omit if none apply)
 **Added:** YYYY-MM-DD
 
 <2–4 sentence description: what to build, why it matters, any constraint the agent needs.>
@@ -113,10 +114,11 @@ This means agent briefs are always current — they reflect the actual codebase 
 | File | Purpose |
 |---|---|
 | `CLAUDE.md` | Project context, implementation status, architecture decisions. Read by every agent. |
-| `TASKS.md` | Single source of truth for all work: active directives, phase tasks, archived work. |
-| `WORKFLOW.md` | This file. The operating manual for the development system. |
-| `CHANGELOG.md` | Shipped work log. One entry per merged PR, newest first. |
-| `reports/` | Timestamped audit output. `docs-audit-*.md`, `product-audit-*.md`, etc. |
+| `.d3/TASKS.md` | Single source of truth for all work: active directives, phase tasks, archived work. |
+| `.d3/WORKFLOW.md` | This file. The operating manual for the development system. |
+| `.d3/CHANGELOG.md` | Shipped work log. One entry per merged PR, newest first. |
+| `.d3/reports/` | Timestamped audit output. `docs-audit-*.md`, `product-audit-*.md`, etc. |
+| `.d3/skills/` | 23 engineering skills (vendored from [agent-skills](https://github.com/addyosmani/agent-skills)). Referenced in directive `**Skills:**` field; injected into agent briefs at execution time. |
 
 ---
 
@@ -126,11 +128,11 @@ This means agent briefs are always current — they reflect the actual codebase 
 
 | Dimension | What it checks | Output |
 |---|---|---|
-| `docs` | Doc accuracy vs. code; consistency; vision alignment | `reports/docs-audit-TIMESTAMP.md` — proposals applied interactively |
-| `product` | Product surfaces vs. vision; UX; roadmap fidelity; mock data exposure | `reports/product-audit-TIMESTAMP.md` — findings by priority tier |
-| `design` | Design system adherence; color tokens; component specs; accessibility | `reports/design-audit-TIMESTAMP.md` |
-| `vision` | Strategic alignment; sequencing; business model integrity; risk exposure | `reports/vision-audit-TIMESTAMP.md` — founding-team briefing format |
-| `code` | Known bugs; import errors; hardening plan gaps | `reports/code-audit-TIMESTAMP.md` — findings by severity |
+| `docs` | Doc accuracy vs. code; consistency; vision alignment | `.d3/reports/docs-audit-TIMESTAMP.md` — proposals applied interactively |
+| `product` | Product surfaces vs. vision; UX; roadmap fidelity; mock data exposure | `.d3/reports/product-audit-TIMESTAMP.md` — findings by priority tier |
+| `design` | Design system adherence; color tokens; component specs; accessibility | `.d3/reports/design-audit-TIMESTAMP.md` |
+| `vision` | Strategic alignment; sequencing; business model integrity; risk exposure | `.d3/reports/vision-audit-TIMESTAMP.md` — founding-team briefing format |
+| `code` | Known bugs; import errors; hardening plan gaps | `.d3/reports/code-audit-TIMESTAMP.md` — findings by severity |
 
 **Prerequisite:** `product` requires a `docs-audit-*.md` within 7 days. Docs must be current before evaluating the product against them.
 
@@ -171,14 +173,14 @@ One command to understand where things stand: services, git state, open directiv
 This system works on any project that uses these conventions:
 
 1. **`CLAUDE.md`** at the root — project context, services, commands
-2. **`TASKS.md`** — directive and task backlog in the format above
-3. **`CHANGELOG.md`** — shipped work log
-4. **`docs/`** — documentation with `docs/current/` for as-built state
-5. **`reports/`** — audit output directory
+2. **`.d3/TASKS.md`** — directive and task backlog in the format above
+3. **`.d3/CHANGELOG.md`** — shipped work log
+4. **`.d3/docs/`** — documentation with `.d3/docs/current/` for as-built state
+5. **`.d3/reports/`** — audit output directory
 
 To use D3 on a new project:
-1. Copy `.claude/commands/` — the D3 commands are at the root level; the `project/` subfolder contains project-specific commands that should not be copied
-2. Create `CLAUDE.md`, `TASKS.md`, `CHANGELOG.md`, and `WORKFLOW.md` following the format in this project
+1. Copy `.claude/commands/` and `.d3/` — commands and the D3 state directory; adapt `.d3/hooks/` scripts to your stack
+2. Create `CLAUDE.md` following the format in this project; `.d3/TASKS.md`, `.d3/CHANGELOG.md`, and `.d3/WORKFLOW.md` come with the copy
 3. Create a `project/` subfolder in `.claude/commands/` for any commands specific to your new project's services
 4. Run `/status` to verify the system is wired up
 5. Run `/audit` to establish a baseline
@@ -251,10 +253,10 @@ The separator between casual and elite users is layers 4 and 5. Most developers 
 | ~~No test gate in `/execute`~~ | ~~Critical~~ | ✅ Implemented — all directives now require test gate in done-when; hooks enforce on every edit |
 | ~~No adversarial review~~ | ~~High~~ | ✅ Implemented — Step 8 in `/execute` runs `/code-review medium` before every merge |
 | ~~Done-when rarely includes tests~~ | ~~Medium~~ | ✅ Implemented — `/directive`, `/plan`, `/resolve` all require test criteria |
-| ~~No `SessionStart` hook~~ | ~~High~~ | ✅ Implemented — `UserPromptSubmit` hook injects session context once per session via `.claude/hooks/session-start.sh` |
+| ~~No `SessionStart` hook~~ | ~~High~~ | ✅ Implemented — `UserPromptSubmit` hook injects session context once per session via `.d3/hooks/session-start.sh` |
 | ~~No GitHub Issues → `/plan`~~ | ~~Medium~~ | ✅ Implemented — `/plan #NNN` reads the issue via `gh issue view` and proposes a directive |
 | ~~No CI integration~~ | ~~Medium~~ | ✅ Implemented — `.github/workflows/claude-review.yml` runs `/code-review medium --comment` on every PR |
-| ~~No workflow scripts~~ | ~~Medium~~ | ✅ Implemented — `scripts/orchestrate.js` worker-pool executor; `/execute` delegates at 20+ directives |
+| ~~No workflow scripts~~ | ~~Medium~~ | ✅ Implemented — `.d3/scripts/orchestrate.js` worker-pool executor; `/execute` delegates at 20+ directives |
 
 **Where D3 stands:** Full audit → plan → execute → verify → sync-docs cycle with enforced lint/test gates, adversarial review on every PR, session-aware context injection, GitHub issue intake, CI review on every push, and an out-of-context orchestrator for large batches. Top-tier by any measure. Remaining gaps: Express test hook (no test runner yet), adversarial review not wired into the orchestrator path, CI flag syntax unverified in production.
 
@@ -267,8 +269,8 @@ The separator between casual and elite users is layers 4 and 5. Most developers 
 **1. Hooks for lint and test gates** ✅
 
 `.claude/settings.json` `PostToolUse` hooks enforce:
-- **ESLint** — runs `npm run lint --prefix client` after any `Edit|Write` touching `client/`. Exit 2 blocks agent turn on failure. Script: `.claude/hooks/client-lint.sh`
-- **pytest** — runs `api-python/.venv/bin/pytest api-python/tests/ -q` after any `Edit|Write` touching `api-python/`. Exit 2 blocks on failure. Script: `.claude/hooks/python-test.sh`
+- **ESLint** — runs `npm run lint --prefix client` after any `Edit|Write` touching `client/`. Exit 2 blocks agent turn on failure. Script: `.d3/hooks/client-lint.sh`
+- **pytest** — runs `api-python/.venv/bin/pytest api-python/tests/ -q` after any `Edit|Write` touching `api-python/`. Exit 2 blocks on failure. Script: `.d3/hooks/python-test.sh`
 - Express hook: add once your Node.js service has a test runner.
 
 **2. Test criterion in every directive's done-when** ✅
@@ -286,7 +288,7 @@ The separator between casual and elite users is layers 4 and 5. Most developers 
 
 **4. SessionStart hook** ✅
 
-`UserPromptSubmit` hook runs `.claude/hooks/session-start.sh`. Uses `session_id` to write a `/tmp` marker — fires exactly once per Claude Code session. Outputs: branch + git state, directive counts + IDs, last audit dates for all five dimensions, recommended next action.
+`UserPromptSubmit` hook runs `.d3/hooks/session-start.sh`. Uses `session_id` to write a `/tmp` marker — fires exactly once per Claude Code session. Outputs: branch + git state, directive counts + IDs, last audit dates for all five dimensions, recommended next action.
 
 **5. `/plan #<issue-number>`** ✅
 
@@ -300,14 +302,14 @@ Step 2 of `/plan` detects `#NNN` or bare-number arguments, calls `gh issue view 
 
 **7. Workflow scripts for large batches** ✅
 
-`scripts/orchestrate.js` — Node.js worker-pool executor. Reads `TASKS.md` for ready directives, builds live briefs from service `CLAUDE.md` files, spawns one `claude --print --dangerously-skip-permissions` per directive in an isolated git worktree, limits concurrency to `D3_CONCURRENCY` (default 4), and writes `TASKS.md` + `CHANGELOG.md` entries incrementally as each agent completes.
+`.d3/scripts/orchestrate.js` — Node.js worker-pool executor. Reads `.d3/TASKS.md` for ready directives, builds live briefs from service `CLAUDE.md` files, spawns one `claude --print --dangerously-skip-permissions` per directive in an isolated git worktree, limits concurrency to `D3_CONCURRENCY` (default 4), and writes `.d3/TASKS.md` + `.d3/CHANGELOG.md` entries incrementally as each agent completes.
 
 `/execute` delegates automatically when 20+ directives are ready. Also available directly:
 ```bash
 npm run orchestrate           # all ready directives
 npm run orchestrate:dry       # preview without executing
-node scripts/orchestrate.js DIRECTIVE-055   # single directive
-D3_CONCURRENCY=6 npm run orchestrate        # override concurrency
+node .d3/scripts/orchestrate.js DIRECTIVE-055   # single directive
+D3_CONCURRENCY=6 npm run orchestrate            # override concurrency
 ```
 
 **8. Scheduled sprints** ✅

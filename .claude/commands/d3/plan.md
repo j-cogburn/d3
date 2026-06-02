@@ -1,15 +1,15 @@
-Parse a source and propose directives to add to the DIRECTIVES section of TASKS.md. Presents proposals before writing anything.
+Parse a source and propose directives to add to the DIRECTIVES section of `.d3/TASKS.md`. Presents proposals before writing anything.
 
 **Usage:**
-- `/plan reports/product-audit-2026-05-31-1000.md` — extract from an audit report
-- `/plan reports/product-audit-*.md "Phase 2"` — focus on a specific section
+- `/plan .d3/reports/product-audit-2026-05-31-1000.md` — extract from an audit report
+- `/plan .d3/reports/product-audit-*.md "Phase 2"` — focus on a specific section
 - `/plan "Fix the broken checkout flow and add order confirmation emails"` — inline description
 - `/plan #42` — read GitHub issue #42 and propose a directive from it
-- `/plan` — read the most recent report in reports/ and propose directives from it
+- `/plan` — read the most recent report in `.d3/reports/` and propose directives from it
 
 ---
 
-## Step 1 — Read TASKS.md
+## Step 1 — Read `.d3/TASKS.md`
 
 Find the highest existing `DIRECTIVE-NNN` ID. New IDs start from N+1.
 
@@ -27,7 +27,7 @@ Use the issue title as the directive title seed and the body as source material.
 
 **If `$ARGUMENTS` is empty:**
 ```bash
-ls -t reports/*.md 2>/dev/null | head -1
+ls -t .d3/reports/*.md 2>/dev/null | head -1
 ```
 Read the most recent report.
 
@@ -47,7 +47,7 @@ Scan the source for discrete, actionable work items. Cast wide — the user will
 
 **Skip:**
 - Pure observations with no action ("The page is clean")
-- Items already in TASKS.md as an active TASK-NNN or DIRECTIVE-NNN (check by keyword match)
+- Items already in `.d3/TASKS.md` as an active TASK-NNN or DIRECTIVE-NNN (check by keyword match)
 - Items explicitly marked deferred, out of scope, or "not now"
 
 For each extracted item, draft:
@@ -55,6 +55,7 @@ For each extracted item, draft:
 - **Description** — 2–3 sentences: what to build, why it matters, any constraint the agent needs
 - **Services** — Express · Python · React (list only what applies)
 - **Agent** — `general-purpose` (default), `Plan` (design-first), or `claude`
+- **Skills** — relevant skills from `.d3/skills/` (omit if none clearly apply). Common mappings: API work → `api-and-interface-design`; any implementation → `incremental-implementation`, `test-driven-development`; UI → `frontend-ui-engineering`; auth/input/integrations → `security-and-hardening`; perf → `performance-optimization`
 - **Done when** — one primary, testable criterion plus a test gate for each service in scope:
   - Express: `npm test --prefix api-express` passes
   - Python: `api-python/.venv/bin/pytest api-python/tests/ -q` passes
@@ -64,12 +65,13 @@ For each extracted item, draft:
 
 ## Step 4 — Present proposals
 
-**Do not write to TASKS.md yet.**
+**Do not write to `.d3/TASKS.md` yet.**
 
 Print each proposal:
 ```
 [N] <Title>
     Services: <list>
+    Skills:   <list or none>
     Agent:    <type>
     Description: <2-3 sentences>
     Done when:   <criterion>
@@ -93,6 +95,7 @@ For each selected proposal, insert immediately after the DIRECTIVES section head
 **Status:** ready
 **Agent:** <type>
 **Services:** <services>
+**Skills:** <comma-separated skill names — omit line if none apply>
 **Added:** YYYY-MM-DD
 
 <Description>

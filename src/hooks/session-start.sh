@@ -17,7 +17,7 @@ touch "$MARKER"
 get_audit_date() {
   local pattern="$1"
   local file
-  file=$(ls -t reports/${pattern}-*.md 2>/dev/null | head -1)
+  file=$(ls -t .d3/reports/${pattern}-*.md 2>/dev/null | head -1)
   if [ -n "$file" ]; then
     basename "$file" | sed "s/${pattern}-//" | sed 's/-..\..*//' | sed 's/-[0-9]*$//'
   else
@@ -32,9 +32,12 @@ VISION_DATE=$(get_audit_date "vision-audit")
 CODE_DATE=$(get_audit_date "code-audit")
 
 # ── Directives ────────────────────────────────────────────────────────────────
-READY=$(grep -c '\*\*Status:\*\* ready' TASKS.md 2>/dev/null || echo 0)
-IN_PROGRESS=$(grep -c 'in-progress' TASKS.md 2>/dev/null || echo 0)
-READY_IDS=$(grep -B4 '\*\*Status:\*\* ready' TASKS.md 2>/dev/null | grep '### DIRECTIVE' | sed 's/### //' | sed 's/:.*//' | tr '\n' ' ')
+READY=$(grep -c '\*\*Status:\*\* ready' .d3/TASKS.md 2>/dev/null || echo 0)
+IN_PROGRESS=$(grep -c 'in-progress' .d3/TASKS.md 2>/dev/null || echo 0)
+READY_IDS=$(grep -B4 '\*\*Status:\*\* ready' .d3/TASKS.md 2>/dev/null | grep '### DIRECTIVE' | sed 's/### //' | sed 's/:.*//' | tr '\n' ' ')
+
+# ── Skills ───────────────────────────────────────────────────────────────────
+SKILL_COUNT=$(ls .d3/skills/ 2>/dev/null | wc -l | tr -d ' ')
 
 # ── Git state ─────────────────────────────────────────────────────────────────
 BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
@@ -68,6 +71,11 @@ echo "DIRECTIVES"
 echo "  Ready:       ${READY}  ${READY_IDS}"
 echo "  In-progress: ${IN_PROGRESS}"
 echo ""
+if [ "$SKILL_COUNT" -gt 0 ]; then
+echo "SKILLS"
+echo "  ${SKILL_COUNT} available in .d3/skills/"
+echo ""
+fi
 echo "LAST AUDIT"
 echo "  docs:    ${DOCS_DATE}"
 echo "  product: ${PRODUCT_DATE}"

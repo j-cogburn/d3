@@ -32,6 +32,8 @@ A complete Claude Code workflow system for shipping software with AI agents. Dro
 
 **`src/scripts/orchestrate.js`** — context-window-safe batch execution for large sprints (installed to `.d3/scripts/`). Runs one `claude` process per directive in isolated git worktrees with configurable concurrency.
 
+**`src/skills/`** — 23 engineering skills vendored from [agent-skills](https://github.com/addyosmani/agent-skills) by Addy Osmani (installed to `.d3/skills/`). Add a `**Skills:**` field to any directive to inject the relevant skill workflows into the agent brief at execution time.
+
 **`src/WORKFLOW.md`** — the complete D3 operating manual (installed to `.d3/WORKFLOW.md`).
 
 **`bin/d3.js`** — the installer CLI: `d3 init` and `d3 update`.

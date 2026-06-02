@@ -19,21 +19,21 @@ Store the extracted content — you will use it to build live agent briefs in St
 
 ## Step 2 — Identify targets
 
-Read `TASKS.md`. If `$ARGUMENTS` is a directive ID (e.g. `DIRECTIVE-055`), target only that directive. Otherwise collect every `### DIRECTIVE-NNN:` block whose `**Status:**` line is exactly `ready`.
+Read `.d3/TASKS.md`. If `$ARGUMENTS` is a directive ID (e.g. `DIRECTIVE-055`), target only that directive. Otherwise collect every `### DIRECTIVE-NNN:` block whose `**Status:**` line is exactly `ready`.
 
 Skip any directive whose status contains `in-progress`, `complete`, or `blocked`.
 
-For each directive extract: ID, Title, Description, Done-when items, Agent type (default `general-purpose`), Services.
+For each directive extract: ID, Title, Description, Done-when items, Agent type (default `general-purpose`), Services, Skills (optional — comma-separated skill names from the `**Skills:**` field if present).
 
 If zero targets found, report and stop.
 
 **Large-batch delegation:** If the target count is 20 or more (and no specific ID was given), delegate to the orchestration script instead of running inline:
 
 ```bash
-node scripts/orchestrate.js
+node .d3/scripts/orchestrate.js
 ```
 
-The script manages worktrees, agent spawning, concurrency, and TASKS.md/CHANGELOG.md updates outside the context window. Report its output and skip to Step 12 (prompt for next steps) once it exits.
+The script manages worktrees, agent spawning, concurrency, and `.d3/TASKS.md`/`.d3/CHANGELOG.md` updates outside the context window. Report its output and skip to Step 12 (prompt for next steps) once it exits.
 
 ---
 
@@ -67,7 +67,7 @@ Ask to proceed or cancel (single-select). If cancelled, stop.
 
 ## Step 5 — Mark in-progress and build briefs
 
-Before spawning, update every target's status in `TASKS.md`:
+Before spawning, update every target's status in `.d3/TASKS.md`:
 ```
 **Status:** in-progress — branch: <branch-name>
 ```
@@ -93,7 +93,7 @@ For each directive, construct the agent brief. Build it by composing live conten
 - [ ] <done-when item 2>
 
 ## Out of scope
-- Do not edit TASKS.md, TASK.template.md, or any .claude/ file
+- Do not edit `.d3/TASKS.md`, TASK.template.md, or any .claude/ file
 - Do not modify other directives or tasks
 
 ## Files to create / edit
@@ -108,6 +108,9 @@ For each service in scope:
 - React: include the routing, API call, and CSS conventions from client/CLAUDE.md
 
 Do not hardcode these patterns — read them fresh from the files read in Step 1.
+
+## Skills
+<If the directive has a **Skills:** field, read each named skill from `.d3/skills/<skill-name>/SKILL.md` and include the full content here. Follow the process defined in each skill as you implement. If `.d3/skills/` does not exist or a named skill file is missing, skip silently.>
 
 ## Setup
 [include install commands appropriate for the services in scope]
@@ -138,8 +141,8 @@ Each call:
 As each agent completes, immediately:
 
 1. Find the PR number: `gh pr list --head <branch> --json number,url --jq '.[0]'`
-2. Update `TASKS.md` status: `**Status:** complete — PR #N · YYYY-MM-DD`
-3. Add entry to `CHANGELOG.md` under today's date heading:
+2. Update `.d3/TASKS.md` status: `**Status:** complete — PR #N · YYYY-MM-DD`
+3. Add entry to `.d3/CHANGELOG.md` under today's date heading:
    ```
    - DIRECTIVE-NNN: <one-line summary>. (PR #N)
    ```
@@ -205,7 +208,7 @@ If `--ff-only` fails, report and do not force-reset.
 
 ## Step 11 — Archive completed directives
 
-1. Re-read `TASKS.md`.
+1. Re-read `.d3/TASKS.md`.
 2. Find every `### DIRECTIVE-NNN:` block whose status starts with `complete`.
 3. Remove those blocks from the active DIRECTIVES section.
 4. Append them verbatim to `## ARCHIVED DIRECTIVES` at the end of the file (create with header if absent, ordered by ID ascending).
