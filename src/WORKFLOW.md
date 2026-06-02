@@ -39,7 +39,7 @@ Each phase is a discrete command. The `/sprint` command runs all five in sequenc
 | Command | Purpose |
 |---|---|
 | `/sprint [scope?]` | Full cycle. Scope: a feature area, phase name, or empty for full product. |
-| `/audit [scope?]` | Comprehensive audit. Scope: `docs` · `product` · `design` · `vision` · `code` · empty for all. Writes timestamped report to `.d3/reports/`. |
+| `/audit [scope?]` | Comprehensive audit. Scope: `docs` · `product` · `design` · `ux` · `accessibility` · `vision` · `code` · empty for all. Writes timestamped report to `.d3/reports/`. |
 | `/plan [source?]` | Extract directives from an audit report, section, inline description, or GitHub issue (`/plan #42`). Presents proposals; user selects before `.d3/TASKS.md` is touched. |
 | `/execute [id?]` | Run all ready directives in parallel. Pass a DIRECTIVE-NNN ID to run one. Includes merge, sync, archive. |
 | `/verify [scope?]` | Confirm the app works. Screenshots changed surfaces. |
@@ -132,8 +132,10 @@ This means agent briefs are always current — they reflect the actual codebase 
 | Dimension | What it checks | Output |
 |---|---|---|
 | `docs` | Doc accuracy vs. code; consistency; vision alignment | `.d3/reports/docs-audit-TIMESTAMP.md` — proposals applied interactively |
-| `product` | Product surfaces vs. vision; UX; roadmap fidelity; mock data exposure | `.d3/reports/product-audit-TIMESTAMP.md` — findings by priority tier |
-| `design` | Design system adherence; color tokens; component specs; accessibility | `.d3/reports/design-audit-TIMESTAMP.md` |
+| `product` | Product surfaces vs. vision; UX; roadmap fidelity; mock data exposure. Desktop + mobile screenshots. | `.d3/reports/product-audit-TIMESTAMP.md` — findings by priority tier |
+| `design` | Design system adherence; color tokens; component specs. Desktop + mobile screenshots. | `.d3/reports/design-audit-TIMESTAMP.md` |
+| `ux` | Nielsen's 10 heuristics; task flows; cognitive load; responsive quality. Three viewports. | `.d3/reports/ux-audit-TIMESTAMP.md` — findings by severity |
+| `accessibility` | WCAG 2.1 AA; keyboard nav; ARIA; contrast ratios; screen reader compatibility | `.d3/reports/accessibility-audit-TIMESTAMP.md` — Pass/Fail per surface |
 | `vision` | Strategic alignment; sequencing; business model integrity; risk exposure | `.d3/reports/vision-audit-TIMESTAMP.md` — founding-team briefing format |
 | `code` | Known bugs; import errors; hardening plan gaps | `.d3/reports/code-audit-TIMESTAMP.md` — findings by severity |
 

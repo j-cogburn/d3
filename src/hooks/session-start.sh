@@ -28,6 +28,8 @@ get_audit_date() {
 DOCS_DATE=$(get_audit_date "docs-audit")
 PRODUCT_DATE=$(get_audit_date "product-audit")
 DESIGN_DATE=$(get_audit_date "design-audit")
+UX_DATE=$(get_audit_date "ux-audit")
+A11Y_DATE=$(get_audit_date "accessibility-audit")
 VISION_DATE=$(get_audit_date "vision-audit")
 CODE_DATE=$(get_audit_date "code-audit")
 
@@ -57,6 +59,10 @@ if [ "$READY" -gt 0 ]; then
   RECOMMENDED="/execute  ($READY directive(s) ready to run)"
 elif [ "$DOCS_DATE" = "never" ]; then
   RECOMMENDED="/audit docs  (no docs audit on record)"
+elif [ "$UX_DATE" = "never" ]; then
+  RECOMMENDED="/audit ux  (no UX audit on record)"
+elif [ "$A11Y_DATE" = "never" ]; then
+  RECOMMENDED="/audit accessibility  (no accessibility audit on record)"
 else
   RECOMMENDED="/status  (nothing ready — check full snapshot)"
 fi
@@ -77,10 +83,12 @@ echo "  ${SKILL_COUNT} available in .d3/skills/"
 echo ""
 fi
 echo "LAST AUDIT"
-echo "  docs:    ${DOCS_DATE}"
-echo "  product: ${PRODUCT_DATE}"
-echo "  design:  ${DESIGN_DATE}"
-echo "  vision:  ${VISION_DATE}"
-echo "  code:    ${CODE_DATE}"
+echo "  docs:          ${DOCS_DATE}"
+echo "  product:       ${PRODUCT_DATE}"
+echo "  design:        ${DESIGN_DATE}"
+echo "  ux:            ${UX_DATE}"
+echo "  accessibility: ${A11Y_DATE}"
+echo "  vision:        ${VISION_DATE}"
+echo "  code:          ${CODE_DATE}"
 echo ""
 echo "RECOMMENDED: ${RECOMMENDED}"

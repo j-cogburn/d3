@@ -49,13 +49,23 @@ curl -sf http://localhost:5001/api/health || echo "EXPRESS DOWN"
 curl -sf http://localhost:3001 || echo "CLIENT DOWN"
 ```
 
-If services are up, set up Playwright and screenshot key surfaces. For each screenshot check:
+If services are up, set up Playwright. Screenshot key surfaces at **three viewports**:
+- Desktop: 1440 × 900
+- Tablet: 768 × 1024
+- Mobile: 375 × 812
+
+For each screenshot check:
 - No console errors or unhandled promise rejections
 - No failed network requests (4xx/5xx)
-- No broken layouts or missing content
+- No broken layouts or missing content at any viewport
 - Empty and error states render correctly
 
 If a feature area was specified, focus screenshots on routes relevant to that area.
+
+**Visual baseline (optional):**
+If `.d3/screenshots/baseline/` exists, save current screenshots to `/tmp/screenshots-current/` and compare. Flag any surfaces where the layout changed unexpectedly. If no baseline exists, offer:
+- "Save current screenshots as baseline in `.d3/screenshots/baseline/`"
+- "Skip baseline comparison"
 
 ---
 
