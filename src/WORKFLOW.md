@@ -50,6 +50,7 @@ Each phase is a discrete command. The `/sprint` command runs all five in sequenc
 | Command | Purpose |
 |---|---|
 | `/spec [idea?]` | Requirements gathering. Interview mode, idea refinement, or GitHub issue → structured spec → feed into `/plan`. |
+| `/wireframe <page> [mobile\|tablet]` | ASCII wireframe for a page, flow, or spec. Saved to `.d3/wireframes/` with timestamped filenames. |
 | `/test [service?]` | Dedicated test pass. Runs all test suites, Playwright screenshots, reports failures. Use before `/release`. |
 | `/improve [scope?]` | Quality-only cycle: design · code · ux · or a feature area. Audit → plan → execute → verify, quality issues only. |
 | `/resolve <description>` | Instant fix. Describe the problem; a directive is created and executed immediately. |
@@ -121,7 +122,8 @@ This means agent briefs are always current — they reflect the actual codebase 
 | `.d3/WORKFLOW.md` | This file. The operating manual for the development system. |
 | `.d3/CHANGELOG.md` | Shipped work log. One entry per merged PR, newest first. |
 | `.d3/reports/` | Timestamped audit output. `docs-audit-*.md`, `product-audit-*.md`, etc. |
-| `.d3/skills/` | 23 engineering skills (vendored from [agent-skills](https://github.com/addyosmani/agent-skills)). Referenced in directive `**Skills:**` field; injected into agent briefs at execution time. |
+| `.d3/skills/` | Engineering skills (vendored from [agent-skills](https://github.com/addyosmani/agent-skills) + custom `wireframe` skill). Referenced in directive `**Skills:**` field; injected into agent briefs at execution time. |
+| `.d3/wireframes/` | ASCII wireframes output by `/wireframe`. Naming: `<slug>-YYYY-MM-DD-HHMM.md`. Feed into `/plan` to create implementation directives. |
 
 ---
 

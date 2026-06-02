@@ -11,6 +11,7 @@ A complete Claude Code workflow system for shipping software with AI agents. Dro
 | Command | Purpose |
 |---|---|
 | `/spec [idea\|#issue]` | Requirements gathering → structured spec → feeds `/plan` |
+| `/wireframe <page> [mobile\|tablet]` | ASCII wireframe for a page, flow, or spec |
 | `/sprint` | Full cycle: audit → plan → execute → verify → sync-docs |
 | `/audit [docs\|product\|design\|ux\|accessibility\|vision\|code]` | Find problems across seven dimensions |
 | `/plan [report\|#issue\|text]` | Extract directives from findings, spec, or GitHub issue |

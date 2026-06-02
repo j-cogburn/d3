@@ -18,7 +18,7 @@ D3 installs into any existing project via `npx github:j-cogburn/d3 init` and wir
 │   ├── commands/         Slash commands → .claude/commands/d3/ in target
 │   ├── hooks/            Hook scripts → .d3/hooks/ in target
 │   ├── scripts/          Orchestrator → .d3/scripts/ in target
-│   ├── skills/           23 agent-skills → .d3/skills/ in target
+│   ├── skills/           23 agent-skills + wireframe skill → .d3/skills/ in target
 │   └── WORKFLOW.md       D3 operating manual → .d3/WORKFLOW.md in target
 ├── templates/            Blank starters copied on d3 init
 │   ├── TASKS.md

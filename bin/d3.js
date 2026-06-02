@@ -112,7 +112,8 @@ function init() {
   // Directory scaffolding
   touch(path.join(TARGET_DIR, '.d3', 'reports', '.gitkeep'));
   touch(path.join(TARGET_DIR, '.d3', 'docs', 'current', '.gitkeep'));
-  log.push('  ✓  .d3/reports/  .d3/docs/');
+  touch(path.join(TARGET_DIR, '.d3', 'wireframes', '.gitkeep'));
+  log.push('  ✓  .d3/reports/  .d3/docs/  .d3/wireframes/');
 
   // settings.json hook merge
   log.push(mergeSettings());
