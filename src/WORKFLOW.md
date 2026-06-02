@@ -49,6 +49,7 @@ Each phase is a discrete command. The `/sprint` command runs all five in sequenc
 
 | Command | Purpose |
 |---|---|
+| `/gap [category?]` | Product gap analysis: missing features, underbuilt capabilities, table stakes, differentiators. Ranked by value × urgency ÷ effort. Feeds into `/plan` and `/spec`. |
 | `/research [dimension?]` | Generative market research: competitive gaps, feature opportunities, trends, user pain points, adjacent markets. Feeds into `/spec` and `/plan`. |
 | `/venture [market|monetize]` | Market opportunity score (6 factors), competitive landscape, monetization vectors ranked by potential, revenue projections with explicit assumptions. |
 | `/evaluate [dimension?]` | Scored assessment across 8 dimensions: vision, code, security, performance, docs, UX, accessibility, process. Tracks trajectory over time. |

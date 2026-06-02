@@ -2,6 +2,7 @@ Parse a source and propose directives to add to the DIRECTIVES section of `.d3/T
 
 **Usage:**
 - `/plan .d3/reports/product-audit-2026-05-31-1000.md` — extract from an audit report
+- `/plan .d3/reports/gap-2026-06-01-1000.md` — create directives from a gap analysis
 - `/plan .d3/reports/research-2026-06-01-1000.md` — extract feature opportunities from a research report
 - `/plan .d3/reports/product-audit-*.md "Phase 2"` — focus on a specific section
 - `/plan "Fix the broken checkout flow and add order confirmation emails"` — inline description
