@@ -149,4 +149,17 @@ echo "  accessibility: ${A11Y_DATE}"
 echo "  vision:        ${VISION_DATE}"
 echo "  code:          ${CODE_DATE}"
 echo ""
+if [ -n "$LAST_ASSESSMENT" ]; then
+echo "Assessment: ${LAST_ASSESSMENT}"
+fi
+echo ""
 echo "RECOMMENDED: ${RECOMMENDED}"
+
+# ── Last assessment ───────────────────────────────────────────────────────────
+LAST_ASSESSMENT_FILE=$(ls -t .d3/reports/assessment-*.md 2>/dev/null | head -1)
+LAST_ASSESSMENT=""
+if [ -n "$LAST_ASSESSMENT_FILE" ]; then
+  SCORE=$(grep -m1 '^\*\*Overall:' "$LAST_ASSESSMENT_FILE" 2>/dev/null | grep -o '[0-9]*/100' | head -1)
+  ADATE=$(basename "$LAST_ASSESSMENT_FILE" | sed 's/assessment-//' | sed 's/-..\..*//' | sed 's/-[0-9]*$//')
+  LAST_ASSESSMENT="${SCORE} (${ADATE})"
+fi

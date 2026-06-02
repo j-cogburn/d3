@@ -49,6 +49,7 @@ Each phase is a discrete command. The `/sprint` command runs all five in sequenc
 
 | Command | Purpose |
 |---|---|
+| `/evaluate [dimension?]` | Scored assessment across 8 dimensions: vision, code, security, performance, docs, UX, accessibility, process. Tracks trajectory over time. |
 | `/setup [refine?]` | **First step after install.** Populates or refines CLAUDE.md via interview. Auto-detects tech stack, services, and dev commands; interviews for product purpose, users, status, and architectural decisions. |
 | `/objective ["title"?]` | **Recommended starting point for each goal.** Interviews you to define the goal, determines the optimal D3 workflow, executes in auto or guided mode. Supports `refine OBJ-NNN` and `list`. |
 | `/spec [idea?]` | Requirements gathering. Interview mode, idea refinement, or GitHub issue → structured spec → feed into `/plan`. |

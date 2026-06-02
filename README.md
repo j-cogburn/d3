@@ -10,6 +10,7 @@ A complete Claude Code workflow system for shipping software with AI agents. Dro
 
 | Command | Purpose |
 |---|---|
+| `/evaluate [dimension]` | Scored assessment across 8 dimensions with letter grades. Tracks trajectory over time. Run at start and after each sprint |
 | `/setup [refine]` | Populate or refine CLAUDE.md via interview. Auto-detects stack, interviews for context that can't be inferred |
 | `/vision [refine\|check]` | Define or refine the project vision. Creates `.d3/vision.md` — read by every agent and planning command |
 | `/objective ["title"]` | Define or refine a goal. Interviews you, determines optimal D3 workflow, executes in auto or guided mode |

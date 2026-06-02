@@ -40,6 +40,9 @@ SERVICES
   React     UP / DOWN
   Python    UP / DOWN
 
+ASSESSMENT
+  <last score and date — or "never run (/evaluate to baseline)">
+
 VISION
   <one-sentence vision from .d3/vision.md>
   Last audit: YYYY-MM-DD / never  (omit section if .d3/vision.md doesn't exist)
