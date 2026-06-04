@@ -1,7 +1,7 @@
 {
   "name": "d3-workflow",
-  "version": "1.0.0",
-  "description": "Directive-Driven Development — a Claude Code workflow system",
+  "version": "1.21.0",
+  "description": "Directive-Driven Development \u2014 a Claude Code workflow system",
   "bin": {
     "d3": "./bin/d3.js"
   },
