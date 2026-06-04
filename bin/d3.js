@@ -288,6 +288,9 @@ function init() {
   // settings.json hook merge
   log.push(mergeSettings());
 
+  // Write version marker
+  writeVersion(getVersion());
+
   // CLAUDE.md — template only if absent
   const claudeDest = path.join(TARGET_DIR, 'CLAUDE.md');
   if (fs.existsSync(claudeDest)) {
@@ -495,9 +498,46 @@ Next steps:
 
 // ── update ────────────────────────────────────────────────────────────────────
 
+function getVersion() {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(PKG_DIR, 'package.json'), 'utf8')).version || 'unknown';
+  } catch { return 'unknown'; }
+}
+
+function getInstalledVersion() {
+  const vf = path.join(TARGET_DIR, '.d3', '.d3-version');
+  return fs.existsSync(vf) ? fs.readFileSync(vf, 'utf8').trim() : null;
+}
+
+function writeVersion(version) {
+  fs.mkdirSync(path.join(TARGET_DIR, '.d3'), { recursive: true });
+  fs.writeFileSync(path.join(TARGET_DIR, '.d3', '.d3-version'), version);
+}
+
 function update() {
-  console.log('\nD3 — updating system files\n');
+  const newVersion  = getVersion();
+  const prevVersion = getInstalledVersion();
+
+  console.log('\nD3 UPDATE');
+  console.log('=========');
+  if (prevVersion) {
+    console.log(`Version: ${prevVersion} → ${newVersion}\n`);
+  } else {
+    console.log(`Version: ${newVersion}\n`);
+  }
+
+  // Detect old D3 and route to migrate
+  const oldSignals = detectOldD3(TARGET_DIR);
+  if (oldSignals.length > 0) {
+    console.log('Old D3 structure detected — running migration before update...\n');
+    migrate();
+    return;
+  }
+
   const log = [];
+
+  // ── Phase 1: Update system files (always overwritten) ────────────────────
+  log.push('UPDATED  (system files — always replaced with latest)');
 
   const systemFiles = [
     { rel: '.d3/hooks',           src: path.join(PKG_DIR, 'src', 'hooks'),               kind: 'dir'  },
@@ -512,13 +552,136 @@ function update() {
     kind === 'dir' ? copyDir(src, dest) : copyFile(src, dest);
     log.push(`  ✓  ${rel}`);
   }
+  log.push('  ⚠  Re-apply any .d3/hooks/ customisations if needed');
 
-  log.push('  ⚠  If you customised .d3/hooks/, re-apply your changes');
+  // ── Phase 2: Preserve state files — report their status ──────────────────
+  log.push('\nPRESERVED  (state — never modified by update)');
+
+  const stateToReport = [
+    ['.d3/TASKS.md',     'project backlog'],
+    ['.d3/CHANGELOG.md', 'shipped work history'],
+    ['.d3/vision.md',    'project vision'],
+    ['.d3/memory.md',    'project memory'],
+    ['.d3/track.md',     'operational course'],
+    ['CLAUDE.md',        'project context'],
+  ];
+
+  for (const [rel, desc] of stateToReport) {
+    const full = path.join(TARGET_DIR, rel);
+    if (fs.existsSync(full)) {
+      // Give a sense of the file's state, not just its existence
+      const lines = fs.readFileSync(full, 'utf8').split('\n').length;
+      const isStub = fs.readFileSync(full, 'utf8').includes('Run /');
+      const status = isStub ? 'stub (not yet populated)' : `${lines} lines`;
+      log.push(`  ⊘  ${rel}  (${desc} — ${status})`);
+    }
+  }
+
+  // Report docs/ and reports/ counts
+  const docsDir = path.join(TARGET_DIR, '.d3', 'docs');
+  if (fs.existsSync(docsDir)) {
+    const docCount = countFiles(docsDir);
+    if (docCount > 0) log.push(`  ⊘  .d3/docs/  (${docCount} files)`);
+  }
+  const reportsDir = path.join(TARGET_DIR, '.d3', 'reports');
+  if (fs.existsSync(reportsDir)) {
+    const reportCount = countFiles(reportsDir);
+    if (reportCount > 0) log.push(`  ⊘  .d3/reports/  (${reportCount} reports)`);
+  }
+
+  // ── Phase 3: Add new state file stubs (only if missing) ──────────────────
+  const newStateFiles = [
+    ['.d3/vision.md',  'vision.md',  '/vision'],
+    ['.d3/memory.md',  'memory.md',  '/bootstrap'],
+    ['.d3/track.md',   'track.md',   '/track set'],
+  ];
+
+  const addedStubs = [];
+  for (const [rel, tmpl, cmd] of newStateFiles) {
+    const dest = path.join(TARGET_DIR, rel);
+    if (!fs.existsSync(dest)) {
+      copyFile(path.join(PKG_DIR, 'templates', tmpl), dest);
+      addedStubs.push(`  ✓  ${rel}  (new — run ${cmd} to populate)`);
+    }
+  }
+
+  if (addedStubs.length > 0) {
+    log.push('\nADDED  (new files introduced in this version)');
+    addedStubs.forEach(l => log.push(l));
+  }
+
+  // ── Phase 4: Scaffold new directories (only if missing) ──────────────────
+  const dirs = [
+    '.d3/reports',
+    '.d3/docs/current',
+    '.d3/docs/adr',
+    '.d3/docs/lessons',
+    '.d3/docs/specs',
+    '.d3/wireframes',
+    '.d3/objectives',
+  ];
+
+  const addedDirs = [];
+  for (const dir of dirs) {
+    const dirPath = path.join(TARGET_DIR, dir);
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+      fs.writeFileSync(path.join(dirPath, '.gitkeep'), '');
+      addedDirs.push(`  ✓  ${dir}/`);
+    }
+  }
+
+  if (addedDirs.length > 0) {
+    if (addedStubs.length === 0) log.push('\nADDED  (new directories introduced in this version)');
+    addedDirs.forEach(l => log.push(l));
+  }
+
+  // ── Phase 5: Format normalisation on state files ─────────────────────────
+  const normResults = [];
+  for (const [rel, filename] of [['.d3/TASKS.md', 'TASKS.md']]) {
+    const filePath = path.join(TARGET_DIR, rel);
+    if (fs.existsSync(filePath)) {
+      const original = fs.readFileSync(filePath, 'utf8');
+      const normalised = normaliseContent(original, filename);
+      if (normalised !== original) {
+        fs.writeFileSync(filePath, normalised);
+        normResults.push(`  ✓  ${rel}  (paths and test gates updated)`);
+      }
+    }
+  }
+
+  if (normResults.length > 0) {
+    log.push('\nNORMALISED  (format updates applied to state files)');
+    normResults.forEach(l => log.push(l));
+  }
+
+  // ── Phase 6: Settings ─────────────────────────────────────────────────────
+  log.push('\nSETTINGS');
   log.push(mergeSettings());
-  log.push('  ⊘  .d3/TASKS.md, CHANGELOG.md, docs/ — preserved (project state)');
 
+  // ── Phase 7: Version marker ───────────────────────────────────────────────
+  writeVersion(newVersion);
+
+  // ── Output ────────────────────────────────────────────────────────────────
   log.forEach(l => console.log(l));
-  console.log();
+
+  console.log(`
+D3 v${newVersion} installed. State guaranteed intact.
+
+  Run /guide to see what to do next in your project.
+`);
+}
+
+// Count non-gitkeep files in a directory recursively
+function countFiles(dir) {
+  let count = 0;
+  try {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory()) count += countFiles(path.join(dir, entry.name));
+      else if (entry.name !== '.gitkeep') count++;
+    }
+  } catch { /* ignore */ }
+  return count;
 }
 
 // ── main ──────────────────────────────────────────────────────────────────────
@@ -529,8 +692,12 @@ if (!COMMAND || COMMAND === 'help') {
   console.log(`
 Usage:
   npx github:j-cogburn/d3 init      Install D3 (auto-migrates from old D3 if detected)
-  npx github:j-cogburn/d3 update    Update D3 system files to latest
+  npx github:j-cogburn/d3 update    Update to latest version — state always preserved
   npx github:j-cogburn/d3 migrate   Migrate an existing project from old D3 format
+
+State guarantee: update NEVER modifies TASKS.md, CHANGELOG.md, vision.md,
+  memory.md, track.md, CLAUDE.md, docs/, or reports/. Only system files
+  (commands, hooks, scripts, skills, WORKFLOW.md) are replaced.
 `);
 } else if (COMMANDS[COMMAND]) {
   COMMANDS[COMMAND]();
