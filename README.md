@@ -15,6 +15,7 @@ A complete Claude Code workflow system for shipping software with AI agents. Dro
 | `/venture [market|monetize]` | Market opportunity score, competitive analysis, monetization vectors, revenue projections |
 | `/evaluate [dimension]` | Scored assessment across 8 dimensions with letter grades. Tracks trajectory over time. Run at start and after each sprint |
 | `/track [set|sprint|check|pivot|correct]` | Operational layer. Phases → sprints with exit criteria. Maintains bearing. Flags drift. Logs pivots. |
+| `/ask [anything]` | Universal entry point. Plain English → D3 routes and executes. |
 | `/track` | Operational layer. Phases → sprints with exit criteria. Bearing every session. Flags drift. Logs pivots. |
 | `/setup [refine]` | Populate or refine CLAUDE.md via interview. Auto-detects stack, interviews for context that can't be inferred |
 | `/vision [refine\|check]` | Define or refine the project vision. Creates `.d3/vision.md` — read by every agent and planning command |
