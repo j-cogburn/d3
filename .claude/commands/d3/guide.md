@@ -104,7 +104,7 @@ GUIDE — YYYY-MM-DD
 
 PROJECT STATE
   Setup:      CLAUDE ✓  Vision [✓/⚠/✗]  Memory [✓/✗]
-  Track:      Phase [N] · Sprint [N.N]  [On track ✓ / Drift ⚠ / Not set ✗]
+  Track:      Phase [N] · Sprint [N.N]  [On track ✓ / Drift ⚠ / Not set — run /track set]
   Work:       [N ready · N in-progress · N completed · N needs-review · N ci-failed]
   Audits:     docs [✓/✗/date]  code [✓/✗]  ux [✓/✗]  accessibility [✓/✗]  vision [✓/✗]
   Analysis:   evaluate [✓/✗]  gap [✓/✗]  venture [✓/✗]
@@ -119,7 +119,7 @@ Stage names (use whichever fits best):
 - **"Agents running — in flight"** (in-progress, nothing else blocking)
 - **"Ready to ship — N directives queued"** (ready directives exist)
 - **"Pending release — N merges since [tag]"** (unreleased merges, no ready work)
-- **"Foundation incomplete"** (CLAUDE.md, vision, or memory missing)
+- **"Foundation incomplete"** (CLAUDE.md, vision, memory, or track not set)
 - **"Active development — quality coverage expanding"** (working project, gaps in audit coverage)
 - **"Well-covered — strategic layer missing"** (audits done, no venture/gap analysis)
 - **"Mature — next sprint starting"** (most things in place, defining next objective)
@@ -139,7 +139,8 @@ Always give exactly **3 next steps**, in priority order. Each step includes:
 3. **Ready work** — if ready directives: execute them
 4. **Active objective** — if objective waiting for next phase: continue it
 5. **Pending release** — if unreleased merges: release
-6. **Foundation gaps** — missing CLAUDE.md content, vision, or memory profile
+6. **Foundation gaps** — missing CLAUDE.md content, vision, memory profile, or course (track not set)
+6a. **Track not set** — if vision and memory are set but track.md is stub: "/track set — define your operational course"
 7. **Audit gaps** — dimensions never run (accessibility and ux are highest value)
 8. **Analysis gaps** — missing venture, gap, or assessment
 9. **Planning** — if everything else is covered: next objective or retro

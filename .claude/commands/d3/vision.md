@@ -172,6 +172,10 @@ Vision saved: .d3/vision.md
 
 Every agent brief, /plan proposal, and /objective will now reference this vision.
 
+Next: /bootstrap — deep-scan your codebase, build a memory profile, and organise documentation.
+This gives every agent a complete picture of what exists before any work begins.
+
+Other options:
   /vision check    — evaluate current directives against the vision
   /audit vision    — deep drift analysis across the full product
   /objective       — define your next goal with vision context

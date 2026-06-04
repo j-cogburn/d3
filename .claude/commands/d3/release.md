@@ -190,3 +190,7 @@ Rollback:   v<previous-version> (no irreversible migrations / see note)
 Changes in this release:
   <summary of CHANGELOG entries since last tag>
 ```
+
+**Track integration:** If `.d3/track.md` exists with an active sprint and this release
+fulfils the sprint's success definition: "Run `/track sprint close` to verify exit
+criteria and advance the course to the next sprint."

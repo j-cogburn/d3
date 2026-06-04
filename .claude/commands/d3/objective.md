@@ -97,6 +97,20 @@ Select the approach from this routing matrix:
 - Bug with unclear root cause → always start with `/audit code`
 - Epic → always break down first; confirm sub-objectives before proceeding
 
+**Track sprint check:** If `.d3/track.md` exists with an active sprint:
+- Determine whether this objective fits within the current sprint's stated goal
+- If it clearly falls outside the sprint:
+  ```
+  ⚠ Sprint boundary: This objective is outside Sprint [N.N] — [Goal].
+    Current sprint focuses on: [sprint goal]
+    Options:
+    - Fold into current sprint (if the sprint can absorb it)
+    - Queue for Sprint [N+1] — define it now, execute later
+    - Execute as an off-sprint maneuver (logged, counts toward drift)
+  ```
+  Ask which option to proceed with before routing to the optimal approach.
+- If it fits within the sprint: proceed normally.
+
 **Vision check:** If `.d3/vision.md` exists, check the objective against it:
 - Does this objective advance the vision or serve a stated user type?
 - Does it conflict with any anti-goal? If yes, flag it explicitly:

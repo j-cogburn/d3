@@ -188,9 +188,12 @@ CLAUDE.md updated — project context is ready.
 Every agent brief will now include this context automatically.
 
 Suggested next steps:
-  /setup services  — update service-level CLAUDE.md files (api-express/, client/, api-python/)
-  /objective       — define what to build next
-  /audit docs      — verify documentation is consistent with the codebase
+Next: /vision — define your project vision (what you're building, for whom, what you won't build).
+Vision keeps every agent strategically aligned. Run it before any execution work.
+
+Other options:
+  /setup services  — update service-level CLAUDE.md files
+  /audit docs      — verify documentation matches the codebase
 ```
 
 If this was a fresh install with no previous directives:

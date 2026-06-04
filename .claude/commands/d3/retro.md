@@ -112,9 +112,33 @@ Save to `.d3/reports/retro-TIMESTAMP.md`:
 
 ---
 
-## Step 5 — Surface next actions
+## Step 5 — Quality trend
 
-Print the recommended focus, then ask (single-select):
+Read the two most recent `/evaluate` reports:
+```bash
+ls -t .d3/reports/assessment-*.md 2>/dev/null | head -2
+```
+If two exist, extract overall scores and show the trend:
+```
+Quality trend: 64/100 → 71/100  ↑ +7  (improving)
+Weakest dimension: Accessibility (22) — never audited
+```
+Include this in the retrospective report under "Quality Signal."
+
+---
+
+## Step 6 — Close the loop
+
+If `.d3/track.md` exists with an active sprint:
+
+1. Show sprint exit criteria completion status from track.md
+2. Ask (single-select):
+   - "Close Sprint [N.N] — all exit criteria met or waived → advance the course"
+   - "Keep sprint open — criteria not yet met"
+3. If closing: run `/track sprint close` logic (verify criteria, log completion, advance)
+4. Then ask: "Plan Sprint [N+1] now? → /track sprint plan"
+
+If no track.md: ask (single-select):
 - "Run /plan to create directives from these recommendations"
 - "Run /sprint to start the next cycle now"
 - "Done — I'll review later"

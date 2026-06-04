@@ -347,3 +347,14 @@ Top improvements:
 
 Run /evaluate --compare after next sprint to track trajectory.
 ```
+
+**Track integration:** If `.d3/track.md` exists and `--compare` mode shows dimension changes:
+- Any dimension that dropped > 10 points since last assessment: flag as drift signal
+  ```
+  ⚠ Quality drift: [Dimension] dropped from N → N (-N pts)
+    This is off-course. Consider:
+    /track correct — if this was unintentional drift
+    /track sprint plan — to add a quality recovery sprint
+  ```
+- If Code or Security dropped: always surface regardless of threshold (quality regressions are never acceptable drift)
+- Print alongside the standard recommendations so the developer can act immediately

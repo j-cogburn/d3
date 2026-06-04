@@ -306,8 +306,11 @@ Organised:
 Convention check: ✓ all D3 files conform / ⚠ N issues found
 
 Next steps:
-  /vision          — define or refine the project vision
+Next: /track set — define your operational course (phases → sprints → exit criteria).
+This is the missing layer between your vision and day-to-day execution.
+
+Other options:
+  /vision          — refine the project vision
   /gap             — find product completeness gaps
   /evaluate        — score the project across all 10 dimensions
-  /guide           — learn how D3 works
 ```

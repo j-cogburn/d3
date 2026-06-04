@@ -419,4 +419,5 @@ Vision:        .d3/reports/vision-audit-TIMESTAMP.md        [verdict: Aligned/Dr
 Code:          .d3/reports/code-audit-TIMESTAMP.md          [N findings]
 
 Run /plan <report-path> to convert findings into directives.
+If `.d3/track.md` exists: Run `/track sprint plan` to load these findings as candidate exit criteria for the next sprint — closes the loop between intelligence and execution.
 ```

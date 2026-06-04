@@ -56,6 +56,17 @@ If no → prompt to run `/vision refine` first, then return here.
 >   2. Time-based — elapsed vs. planned duration
 >   3. Milestone-based — explicit checkpoints you define"
 
+**Intelligence check (before phases):**
+
+Before mapping phases, load any recent intelligence that should inform the course:
+```bash
+ls -t .d3/reports/gap-*.md .d3/reports/research-*.md \
+   .d3/reports/venture-*.md .d3/reports/assessment-*.md 2>/dev/null | head -5
+```
+If relevant reports exist: "I found recent intelligence that might shape your phases. Load findings as planning context?" Present top items and let user include or skip. This ensures your course is grounded in what the project actually needs.
+
+---
+
 **Q3 — Phase mapping:**
 > "What are the major phases between here and the destination? List them in order — name and one-sentence purpose for each. (2–5 phases typical)"
 
