@@ -47,6 +47,13 @@ fi
 # ── Objectives ───────────────────────────────────────────────────────────────
 ACTIVE_OBJECTIVES=$(grep -l 'Status.*active' .d3/objectives/obj-*.md 2>/dev/null | wc -l | tr -d ' ')
 OBJECTIVE_SUMMARY=""
+if [ -n "$TRACK_PHASE" ] || [ -n "$TRACK_SPRINT" ]; then
+echo "TRACK"
+[ -n "$TRACK_PHASE" ] && echo "  Phase:   ${TRACK_PHASE}"
+[ -n "$TRACK_SPRINT" ] && echo "  Sprint:  ${TRACK_SPRINT}"
+[ -n "$TRACK_BEARING" ] && echo "  Bearing: ${TRACK_BEARING}"
+echo ""
+fi
 if [ "$ACTIVE_OBJECTIVES" -gt 0 ]; then
   OBJECTIVE_SUMMARY=$(grep -h '^\*\*ID:\*\*\|^# Objective:' .d3/objectives/obj-*.md 2>/dev/null | paste - - | sed 's/# Objective: //' | sed 's/\*\*ID:\*\* //' | awk '{print "  " $2 "  " $1}' | head -3)
 fi
@@ -83,6 +90,10 @@ LAST_CHANGELOG_DATE=$(grep -m1 '^## ' .d3/CHANGELOG.md 2>/dev/null | sed 's/## /
 TODAY_DATE=$(date '+%Y-%m-%d')
 
 # Determine intent profile and recommendation
+# Track-aware: if drift detected, elevate as correction needed
+TRACK_NEEDS_CORRECTION=0
+[ "$TRACK_BEARING" = "drift" ] || [ "$TRACK_BEARING" = "off track" ] && TRACK_NEEDS_CORRECTION=1
+
 if [ "$NEEDS_REVIEW" -gt 0 ]; then
   # Directives flagged by adversarial review need human attention
   RECOMMENDED="/status  ($NEEDS_REVIEW directive(s) need-review — adversarial review flagged issues)"
@@ -91,6 +102,8 @@ elif [ "$IN_PROGRESS" -gt 0 ]; then
   RECOMMENDED="/status  ($IN_PROGRESS directive(s) in-progress — check what's still running)"
 elif [ "$ACTIVE_OBJECTIVES" -gt 0 ] && [ "$READY" -eq 0 ]; then
   RECOMMENDED="/objective  (active objective needs next phase)"
+elif [ "$TRACK_NEEDS_CORRECTION" -eq 1 ]; then
+  RECOMMENDED="/track correct  (drift detected — return to sprint heading)"
 elif [ "$READY" -gt 0 ]; then
   RECOMMENDED="/execute  ($READY directive(s) ready to run)"
 elif [ "$UNRELEASED_MERGES" -gt 0 ] && [ "$READY" -eq 0 ]; then
@@ -184,4 +197,15 @@ PROJECT_MEMORY=""
 if [ -f ".d3/memory.md" ]; then
   # Extract the Identity line from the memory profile
   PROJECT_MEMORY=$(awk '/^## Identity/{found=1; next} found && NF && !/^##/{print; exit}' .d3/memory.md 2>/dev/null)
+fi
+
+# ── Track / Navigation ────────────────────────────────────────────────────────
+TRACK_PHASE=""
+TRACK_SPRINT=""
+TRACK_BEARING=""
+
+if [ -f ".d3/track.md" ] && ! grep -q 'Run /track set' .d3/track.md 2>/dev/null; then
+  TRACK_PHASE=$(awk '/^### Phase.*▶ active|Status.*active/{found=1} found && /^### Phase/{sub(/^### /,""); sub(/ ▶.*$/,""); sub(/ ○.*$/,""); print; exit}' .d3/track.md 2>/dev/null | head -c 50)
+  TRACK_SPRINT=$(awk '/#### Sprint.*▶ active/{sub(/^#### /,""); sub(/ ▶.*$/,""); print; exit}' .d3/track.md 2>/dev/null | head -c 50)
+  TRACK_BEARING=$(grep -m1 '^\*\*Bearing:\*\*' .d3/track.md 2>/dev/null | sed 's/\*\*Bearing:\*\* //')
 fi

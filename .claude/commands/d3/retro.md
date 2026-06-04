@@ -61,6 +61,18 @@ Also read:
 
 ---
 
+## Step 3b — Bearing review (if track.md exists)
+
+Read `.d3/track.md`. Add a bearing review section to the retrospective:
+
+- Was the sprint goal achieved? Were exit criteria met?
+- What % of work was on-sprint vs. off-sprint (tactical maneuvers)?
+- Did the course remain on track, or was a pivot/correction needed? Why?
+- Should the next sprint be re-planned based on what was learned?
+- Does the phase exit criteria still make sense, or needs updating?
+
+---
+
 ## Step 4 — Write retrospective
 
 Save to `.d3/reports/retro-TIMESTAMP.md`:

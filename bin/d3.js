@@ -265,6 +265,7 @@ function init() {
     ['.d3/CHANGELOG.md', 'CHANGELOG.md'],
     ['.d3/vision.md',    'vision.md'],
     ['.d3/memory.md',    'memory.md'],
+    ['.d3/track.md',     'track.md'],
   ]) {
     const dest = path.join(TARGET_DIR, rel);
     if (fs.existsSync(dest)) {

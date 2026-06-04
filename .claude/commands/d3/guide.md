@@ -37,6 +37,11 @@ for dim in docs-audit product-audit design-audit ux-audit accessibility-audit vi
   [ -n "$f" ] && echo "audit:$dim:$(basename $f | sed 's/.*-\([0-9-]*\)\..*/\1/')" || echo "audit:$dim:never"
 done
 
+# ── Track / operational layer ─────────────────────────────────────────────────
+[ -f .d3/track.md ] &&   (grep -q 'Run /track set' .d3/track.md 2>/dev/null && echo "track:stub" || echo "track:active") ||   echo "track:none"
+TRACK_BEARING=$(grep -m1 '^\*\*Bearing:\*\*' .d3/track.md 2>/dev/null | sed 's/\*\*Bearing:\*\* //')
+[ "$TRACK_BEARING" = "drift" ] || [ "$TRACK_BEARING" = "off track" ] && echo "track:drift" || true
+
 # ── Intelligence coverage ─────────────────────────────────────────────────────
 ls -t .d3/reports/venture-*.md 2>/dev/null | head -1 | xargs -I{} echo "venture:exists" || echo "venture:none"
 ls -t .d3/reports/gap-*.md 2>/dev/null | head -1 | xargs -I{} echo "gap:exists" || echo "gap:none"
@@ -99,6 +104,7 @@ GUIDE — YYYY-MM-DD
 
 PROJECT STATE
   Setup:      CLAUDE ✓  Vision [✓/⚠/✗]  Memory [✓/✗]
+  Track:      Phase [N] · Sprint [N.N]  [On track ✓ / Drift ⚠ / Not set ✗]
   Work:       [N ready · N in-progress · N completed · N needs-review · N ci-failed]
   Audits:     docs [✓/✗/date]  code [✓/✗]  ux [✓/✗]  accessibility [✓/✗]  vision [✓/✗]
   Analysis:   evaluate [✓/✗]  gap [✓/✗]  venture [✓/✗]
@@ -109,6 +115,7 @@ STAGE: [plain English stage name]
 
 Stage names (use whichever fits best):
 - **"Blocked — manual review needed"** (needs-review or ci-failed)
+- **"Off track — course correction needed"** (track drift detected)
 - **"Agents running — in flight"** (in-progress, nothing else blocking)
 - **"Ready to ship — N directives queued"** (ready directives exist)
 - **"Pending release — N merges since [tag]"** (unreleased merges, no ready work)

@@ -54,6 +54,13 @@ GIT
   Local:    N commits ahead / up to date
   Dirty:    yes (N files) / clean
 
+TRACK
+  Phase [N] — [Phase name]  ([Status])
+  Sprint [N.N] — [Sprint goal]
+  Bearing: ✓ On track / ⚠ Drift / ✗ Off track
+  Position: [N/N complete — N%]  [or: Day N/N — N%]
+  (omit section if .d3/track.md not set)
+
 OBJECTIVES
   OBJ-NNN  <title>  [Phase N/M — next: /<command>]
   (omit section if no active objectives)

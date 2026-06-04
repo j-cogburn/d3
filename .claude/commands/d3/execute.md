@@ -49,6 +49,12 @@ Slug = title lowercased, spaces → hyphens, max 5 words, strip punctuation.
 
 ## Step 4 — Conflict analysis and confirm
 
+**Track check:** If `.d3/track.md` exists with an active sprint, flag any directives outside that sprint:
+```
+⚠ Track notice: DIRECTIVE-NNN is outside the current sprint.
+  Off-sprint work counts toward drift. Run /track correct after if unplanned.
+```
+
 **Conflict analysis (before presenting):**
 
 Scan all target directives for potential conceptual conflicts. Two directives conflict if they:

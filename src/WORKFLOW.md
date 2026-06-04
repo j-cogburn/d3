@@ -53,6 +53,7 @@ Each phase is a discrete command. The `/sprint` command runs all five in sequenc
 | `/research [dimension?]` | Generative market research: competitive gaps, feature opportunities, trends, user pain points, adjacent markets. Feeds into `/spec` and `/plan`. |
 | `/venture [market|monetize]` | Market opportunity score (6 factors), competitive landscape, monetization vectors ranked by potential, revenue projections with explicit assumptions. |
 | `/evaluate [dimension?]` | **Unified quality dashboard** — 10 dimensions on a consistent 0–100 scale: Vision, Code, Security, Performance, Documentation, UX & Design, Accessibility, Product Completeness (from /gap), Process, Business (from /venture). | across 8 dimensions: vision, code, security, performance, docs, UX, accessibility, process. Tracks trajectory over time. |
+| `/track` | **Operational layer.** Translates destination into phases → sprints with exit criteria. Maintains bearing every session. Flags drift. Logs pivots and corrections. |
 | `/setup [refine?]` | **First step after install.** Populates or refines CLAUDE.md via interview. Auto-detects tech stack, services, and dev commands; interviews for product purpose, users, status, and architectural decisions. |
 | `/objective ["title"?]` | **Recommended starting point for each goal.** Interviews you to define the goal, determines the optimal D3 workflow, executes in auto or guided mode. Supports `refine OBJ-NNN` and `list`. |
 | `/spec [idea?]` | Requirements gathering. Interview mode, idea refinement, or GitHub issue → structured spec → feed into `/plan`. |
@@ -130,6 +131,7 @@ This means agent briefs are always current — they reflect the actual codebase 
 | `.d3/reports/` | Timestamped audit output. `docs-audit-*.md`, `product-audit-*.md`, etc. |
 | `.d3/skills/` | Engineering skills (vendored from [agent-skills](https://github.com/addyosmani/agent-skills) + custom `wireframe` skill). Referenced in directive `**Skills:**` field; injected into agent briefs at execution time. |
 | `.d3/wireframes/` | ASCII wireframes output by `/wireframe`. Naming: `<slug>-YYYY-MM-DD-HHMM.md`. Feed into `/plan` to create implementation directives. |
+| `.d3/track.md` | **Operational course** — phases, sprints, exit criteria, navigation log, bearing state. Set by `/track set`. Read every session. |
 | `.d3/vision.md` | **Project vision — single source of strategic truth.** Defined by `/vision`. Read by every agent brief, `/plan`, `/audit vision`, `/objective`, and `/spec`. Contains: vision sentence, users + JTBD, success horizon, strategic bets, anti-goals, decision principles. |
 | `.d3/objectives/` | Objective files output by `/objective`. Naming: `obj-NNN-<slug>-TIMESTAMP.md`. Track goal → approach → progress → directives spawned. |
 | `.d3/docs/lessons/` | Agent lessons. Created when adversarial review flags critical findings. Injected into future briefs for the same services. |
