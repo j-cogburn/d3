@@ -18,6 +18,21 @@ Suggest the next patch/minor version based on recent CHANGELOG entries. Ask the 
 
 If `$ARGUMENTS` provides a version, use it directly.
 
+**Immediately update `package.json` to match the version before proceeding:**
+```bash
+python3 -c "
+import json, sys
+v = sys.argv[1]
+pkg = json.load(open('package.json'))
+pkg['version'] = v
+json.dump(pkg, open('package.json', 'w'), indent=2)
+open('package.json', 'a').write('\n')
+print('package.json updated to', v)
+" <version>
+git add package.json
+```
+This keeps `package.json`, git tags, and `d3 update` version reporting in sync.
+
 ---
 
 ## Step 2 — Confirm main is clean and pushed
