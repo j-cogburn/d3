@@ -4,6 +4,7 @@
 
 const fs   = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 const PKG_DIR    = path.resolve(__dirname, '..');
 const TARGET_DIR = process.cwd();
@@ -659,6 +660,24 @@ function update() {
   log.push('\nSETTINGS');
   log.push(mergeSettings());
 
+  // ── Phase 6.5: TASKS.md → node migration (DIR-051) ────────────────────────
+  // Only fires on a legacy monolithic backlog (### DIRECTIVE-/TASK- blocks).
+  // Idempotent + non-destructive: existing nodes are skipped, TASKS.md is kept.
+  const tasksPath = path.join(TARGET_DIR, '.d3', 'TASKS.md');
+  if (fs.existsSync(tasksPath) && /^### (DIRECTIVE|TASK)-\d+:/m.test(fs.readFileSync(tasksPath, 'utf8'))) {
+    try {
+      const { migrateTasksToNodes } = require('../src/scripts/lib/migrate-tasks');
+      const r = migrateTasksToNodes(path.join(TARGET_DIR, '.d3'));
+      if (r.migrated > 0) {
+        log.push('\nMIGRATED  (TASKS.md → directive nodes)');
+        log.push(`  ✓  ${r.migrated} block(s) → .d3/directives/  (${r.quarantined} quarantined under OBJ-000)`);
+        if (r.orphanObjectiveCreated) log.push('  ✓  created OBJ-000 (Legacy / unclassified) — re-home via /define');
+        if (r.skipped) log.push(`  ⊘  ${r.skipped} already migrated — skipped`);
+        log.push('  ⚠  TASKS.md left in place; nodes are now the source of truth (see d3 tree)');
+      }
+    } catch (e) { log.push(`  ⚠  TASKS.md migration skipped: ${e.message}`); }
+  }
+
   // ── Phase 7: Version marker ───────────────────────────────────────────────
   writeVersion(newVersion);
 
@@ -686,7 +705,27 @@ function countFiles(dir) {
 
 // ── main ──────────────────────────────────────────────────────────────────────
 
-const COMMANDS = { init, update, migrate };
+function runScript(rel, extra) {
+  const script = path.join(PKG_DIR, 'src', 'scripts', rel);
+  const r = spawnSync(process.execPath, [script, TARGET_DIR, ...extra], { stdio: 'inherit' });
+  process.exit(r.status == null ? 0 : r.status);
+}
+function indexCmd() { runScript('d3-index.js', process.argv.slice(3)); }
+function treeCmd()  { runScript('d3-tree.js',  process.argv.slice(3)); }
+function runCmd()   { runScript('d3-run.js',   process.argv.slice(3)); }
+function learnCmd() {
+  const rest = process.argv.slice(3);
+  if (rest[0] === 'git') return runScript('d3-learn-git.js', rest);
+  console.log(`
+d3 learn — the scriptable LEARN dimension is git forensics:
+  d3 learn git [--since=90d] [--print]   DORA proxies, hotspots, coupling, CFR
+
+Other LEARN dimensions (docs · code · design · ux · accessibility · vision ·
+product · market) run via the /learn slash command in Claude Code.
+`);
+}
+
+const COMMANDS = { init, update, migrate, index: indexCmd, tree: treeCmd, run: runCmd, learn: learnCmd };
 
 if (!COMMAND || COMMAND === 'help') {
   console.log(`
@@ -694,6 +733,14 @@ Usage:
   npx github:j-cogburn/d3 init      Install D3 (auto-migrates from old D3 if detected)
   npx github:j-cogburn/d3 update    Update to latest version — state always preserved
   npx github:j-cogburn/d3 migrate   Migrate an existing project from old D3 format
+  d3 index                          Rebuild .d3/index.db + index.json; run integrity gate
+  d3 tree [OBJ-NNN]                 Render the objective/directive tree with status rollup
+  d3 run                            Start the continuous runner + live dashboard
+                                      (three tickers; press a number to act on items)
+  d3 run --print                    Render the dashboard once and exit (headless/CI)
+  d3 run --once [--dry-run]         Build every ready+unblocked directive in one pass
+                                      (graph-native successor to npm run orchestrate)
+  d3 learn git [--since=90d]        Git-forensics report: DORA proxies, hotspots, coupling
 
 State guarantee: update NEVER modifies TASKS.md, CHANGELOG.md, vision.md,
   memory.md, track.md, CLAUDE.md, docs/, or reports/. Only system files

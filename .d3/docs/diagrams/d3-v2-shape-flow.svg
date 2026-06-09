@@ -1,0 +1,70 @@
+<svg viewBox="0 0 880 300" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif, system-ui, sans-serif">
+  <rect x="0" y="0" width="880" height="300" rx="14" fill="#ffffff"/>
+  <text x="32" y="38" font-size="20" font-weight="700" fill="#0f172a">D3 v2 — inside SHAPE</text>
+  <text x="32" y="60" font-size="13" fill="#64748b">No directive is written until a solution is chosen and seen in low fidelity.</text>
+
+  <defs>
+    <marker id="s1" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#2563eb"/></marker>
+    <marker id="s2" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#d97706"/></marker>
+  </defs>
+
+  <g font-size="12">
+    <!-- objective -->
+    <rect x="24" y="110" width="96" height="50" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="72" y="132" text-anchor="middle" font-weight="700" fill="#1e3a8a">Objective</text>
+    <text x="72" y="148" text-anchor="middle" font-size="9" fill="#475569">the problem</text>
+
+    <!-- options -->
+    <rect x="150" y="110" width="96" height="50" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="198" y="132" text-anchor="middle" font-weight="700" fill="#0f172a">OPTIONS</text>
+    <text x="198" y="148" text-anchor="middle" font-size="9" fill="#475569">2-4, scored</text>
+
+    <!-- recommend -->
+    <rect x="276" y="110" width="104" height="50" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="328" y="132" text-anchor="middle" font-weight="700" fill="#0f172a">RECOMMEND</text>
+    <text x="328" y="148" text-anchor="middle" font-size="9" fill="#475569">best + why</text>
+
+    <!-- select -->
+    <rect x="410" y="110" width="96" height="50" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+    <text x="458" y="132" text-anchor="middle" font-weight="700" fill="#92400e">SELECT</text>
+    <text x="458" y="148" text-anchor="middle" font-size="9" fill="#475569">owner</text>
+
+    <!-- sketch -->
+    <rect x="536" y="110" width="96" height="50" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+    <text x="584" y="132" text-anchor="middle" font-weight="700" fill="#0f172a">SKETCH</text>
+    <text x="584" y="148" text-anchor="middle" font-size="9" fill="#475569">low-fi, vN</text>
+
+    <!-- review -->
+    <rect x="662" y="110" width="96" height="50" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="1.5"/>
+    <text x="710" y="132" text-anchor="middle" font-weight="700" fill="#92400e">REVIEW</text>
+    <text x="710" y="148" text-anchor="middle" font-size="9" fill="#475569">owner</text>
+
+    <!-- directives -->
+    <rect x="784" y="110" width="72" height="50" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="820" y="129" text-anchor="middle" font-weight="700" font-size="11" fill="#1e3a8a">DIREC-</text>
+    <text x="820" y="143" text-anchor="middle" font-weight="700" font-size="11" fill="#1e3a8a">TIVES</text>
+    <text x="820" y="155" text-anchor="middle" font-size="8" fill="#475569">-&gt; BUILD</text>
+  </g>
+
+  <!-- forward arrows -->
+  <g stroke="#2563eb" stroke-width="2" fill="none">
+    <line x1="120" y1="135" x2="148" y2="135" marker-end="url(#s1)"/>
+    <line x1="246" y1="135" x2="274" y2="135" marker-end="url(#s1)"/>
+    <line x1="380" y1="135" x2="408" y2="135" marker-end="url(#s1)"/>
+    <line x1="506" y1="135" x2="534" y2="135" marker-end="url(#s1)"/>
+    <line x1="632" y1="135" x2="660" y2="135" marker-end="url(#s1)"/>
+    <line x1="758" y1="135" x2="782" y2="135" marker-end="url(#s1)"/>
+  </g>
+
+  <!-- revise loop REVIEW -> SKETCH -->
+  <path d="M710 160 V196 H584 V162" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#s2)"/>
+  <text x="647" y="212" text-anchor="middle" font-size="11" fill="#b45309">revise -&gt; new version (loop until approved)</text>
+
+  <!-- gate note -->
+  <text x="784" y="186" text-anchor="middle" font-size="9" fill="#64748b">only an approved</text>
+  <text x="820" y="198" text-anchor="middle" font-size="9" fill="#64748b">sketch unlocks these</text>
+
+  <!-- one-way note -->
+  <rect x="24" y="238" width="832" height="40" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="1.2"/>
+  <text x="40" y="263" font-size="11" fill="#991b1b"><tspan font-weight="700">One-way door?</tspan>  After SELECT, before DIRECTIVES: write an ADR + get owner sign-off. Two-way doors skip straight through. (Match ceremony to stakes.)</text>
+</svg>

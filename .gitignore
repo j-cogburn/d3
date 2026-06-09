@@ -1,4 +1,12 @@
 .env
 .env.*
 node_modules/
-tests/
+
+# derived index — source of truth is the node files; rebuild with `d3 index`
+.d3/index.db
+.d3/index.db-journal
+.d3/index.json
+
+# d3 run — runner working dirs / lock (never source of truth)
+.d3/worktrees/
+.d3/run/
