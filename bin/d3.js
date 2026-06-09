@@ -516,18 +516,6 @@ function writeVersion(version) {
 }
 
 function update() {
-  // If running from node_modules (installed dep), re-exec via npx to get the
-  // latest from GitHub rather than the pinned installed version. The env flag
-  // prevents re-entry when npx itself spawns this script.
-  if (!process.env.D3_UPDATING && PKG_DIR.includes('node_modules')) {
-    const { spawnSync } = require('child_process');
-    const r = spawnSync(
-      'npx', ['--yes', 'github:j-cogburn/d3', 'update', ...process.argv.slice(3)],
-      { stdio: 'inherit', env: { ...process.env, D3_UPDATING: '1' } }
-    );
-    process.exit(r.status ?? 0);
-  }
-
   const newVersion  = getVersion();
   const prevVersion = getInstalledVersion();
 
