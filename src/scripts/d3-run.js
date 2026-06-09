@@ -531,12 +531,86 @@ function draw(projectDir, state) {
   process.stdout.write(runner.renderBoard(board, { interactive: !!process.stdin.isTTY, selectedIndex }) + '\n');
 }
 
+// ── read-only monitor (pure observer — no autonomous build) ─────────────────────
+async function startMonitor(projectDir, opts = {}) {
+  const d3Dir = path.join(projectDir, '.d3');
+  if (!fs.existsSync(d3Dir)) { console.error(`No .d3 directory at ${projectDir}`); process.exit(2); }
+
+  // --print: single headless render then exit
+  if (opts.print) {
+    const { board } = snapshot(projectDir, { autonomy: 'off', startedAt: Date.now() });
+    const cliBoard = translateToCli(board);
+    console.log(runner.renderBoard(cliBoard, { interactive: false }));
+    return;
+  }
+
+  const state = { startedAt: Date.now(), autonomy: 'monitor', paused: false, outer: null,
+    lastGitHead: gitHead(projectDir), selectedIndex: 0 };
+
+  let stopping = false;
+  const shutdown = (signal) => {
+    if (stopping) return; stopping = true;
+    if (process.stdout.isTTY) process.stdout.write('\x1b[?25h');
+    process.stdout.write('\n');
+    runner.releaseLock(d3Dir);
+    if (process.stdin.isTTY) { try { process.stdin.setRawMode(false); } catch {} process.stdin.pause(); }
+    process.exit(0);
+  };
+  process.on('SIGINT', () => shutdown('SIGINT'));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+
+  const tty = process.stdin.isTTY && !opts.noTty;
+  if (tty) {
+    process.stdin.setRawMode(true); process.stdin.resume(); process.stdin.setEncoding('utf8');
+    process.stdin.on('data', (key) => {
+      if (key === '\x03' || key === 'q') return shutdown('quit');
+      if (key === 'r') drawMonitor(projectDir, state);
+    });
+  }
+
+  if (process.stdout.isTTY) process.stdout.write('\x1b[?25l');
+  drawMonitor(projectDir, state);
+
+  while (!stopping) {
+    const head = gitHead(projectDir);
+    if (head && head !== state.lastGitHead) {
+      state.lastGitHead = head;
+      state.outer = 'new commit detected — run `d3 learn git` to analyse';
+      drawMonitor(projectDir, state);
+    }
+    await new Promise((r) => setTimeout(r, 5000));
+  }
+}
+
+// Translate slash commands to CLI commands for the monitor display
+function translateToCli(board) {
+  return {
+    ...board,
+    needsYou: board.needsYou.map(item => ({
+      ...item,
+      command: item.command.replace(/^\/d3:/, 'd3 '),
+    })),
+  };
+}
+
+function drawMonitor(projectDir, state) {
+  const { board } = snapshot(projectDir, state);
+  const cliBoard = translateToCli(board);
+  if (process.stdout.isTTY) process.stdout.write('\x1b[2J\x1b[H');
+  process.stdout.write(runner.renderBoard(cliBoard, {
+    interactive: !!process.stdin.isTTY,
+    monitorMode: true,
+  }) + '\n');
+}
+
+
 // ── main ────────────────────────────────────────────────────────────────────
 function parseArgs(argv) {
-  const opts = { once: false, dryRun: false, noGate: false, print: false, noTty: false,
+  const opts = { once: false, monitor: false, dryRun: false, noGate: false, print: false, noTty: false,
     target: null, concurrency: null, autonomy: null, maxTicks: null, projectDir: process.cwd() };
   for (const a of argv) {
-    if (a === '--once') opts.once = true;
+    if (a === '--monitor') opts.monitor = true;
+    else if (a === '--once') opts.once = true;
     else if (a === '--dry-run' || a === '--plan') opts.dryRun = true;
     else if (a === '--no-gate') opts.noGate = true;
     else if (a === '--print' || a === '--status') opts.print = true;
@@ -552,8 +626,9 @@ function parseArgs(argv) {
 
 async function main(argv) {
   const opts = parseArgs(argv);
-  if (opts.once) return runOnce(opts.projectDir, opts);   // single inner-loop pass
-  return startDaemon(opts.projectDir, opts);              // continuous dashboard runner
+  if (opts.once)    return runOnce(opts.projectDir, opts);    // single build pass
+  if (opts.monitor) return startMonitor(opts.projectDir, opts); // read-only dashboard
+  return startDaemon(opts.projectDir, opts);                  // full daemon (legacy)
 }
 
 if (require.main === module) {

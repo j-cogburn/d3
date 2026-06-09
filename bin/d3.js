@@ -722,41 +722,66 @@ function runScript(rel, extra) {
   const r = spawnSync(process.execPath, [script, TARGET_DIR, ...extra], { stdio: 'inherit' });
   process.exit(r.status == null ? 0 : r.status);
 }
-function indexCmd() { runScript('d3-index.js', process.argv.slice(3)); }
-function treeCmd()  { runScript('d3-tree.js',  process.argv.slice(3)); }
-function runCmd()   { runScript('d3-run.js',   process.argv.slice(3)); }
+
+// Spawn an interactive claude session with a D3 command file as the prompt
+function spawnClaude(cmdFile, args) {
+  const cmdPath = path.join(PKG_DIR, '.claude', 'commands', 'd3', cmdFile);
+  if (!fs.existsSync(cmdPath)) { console.error(`Command not found: ${cmdPath}`); process.exit(1); }
+  const content = fs.readFileSync(cmdPath, 'utf8');
+  const prompt  = args.length ? `${content}\n\nARGUMENTS: ${args.join(' ')}` : content;
+  const r = spawnSync('claude', ['-p', prompt, '--dangerously-skip-permissions'],
+    { cwd: TARGET_DIR, stdio: 'inherit', env: { ...process.env } });
+  process.exit(r.status == null ? 0 : r.status);
+}
+
+function indexCmd()   { runScript('d3-index.js', process.argv.slice(3)); }
+function treeCmd()    { runScript('d3-tree.js',  process.argv.slice(3)); }
+function buildCmd()   { runScript('d3-run.js',   ['--once', ...process.argv.slice(3)]); }
+function monitorCmd() { runScript('d3-run.js',   ['--monitor', ...process.argv.slice(3)]); }
+function defineCmd()  { spawnClaude('define.md',  process.argv.slice(3)); }
+function shapeCmd()   { spawnClaude('shape.md',   process.argv.slice(3)); }
+function proveCmd()   { spawnClaude('prove.md',   process.argv.slice(3)); }
+function statusCmd()  { spawnClaude('status.md',  process.argv.slice(3)); }
 function learnCmd() {
   const rest = process.argv.slice(3);
   if (rest[0] === 'git') return runScript('d3-learn-git.js', rest);
-  console.log(`
-d3 learn — the scriptable LEARN dimension is git forensics:
-  d3 learn git [--since=90d] [--print]   DORA proxies, hotspots, coupling, CFR
-
-Other LEARN dimensions (docs · code · design · ux · accessibility · vision ·
-product · market) run via the /learn slash command in Claude Code.
-`);
+  spawnClaude('learn.md', rest);
 }
 
-const COMMANDS = { init, update, migrate, index: indexCmd, tree: treeCmd, run: runCmd, learn: learnCmd };
+const COMMANDS = {
+  init, update, migrate,
+  index: indexCmd, tree: treeCmd,
+  define: defineCmd, shape: shapeCmd, build: buildCmd,
+  prove: proveCmd, learn: learnCmd, status: statusCmd,
+  monitor: monitorCmd,
+};
 
 if (!COMMAND || COMMAND === 'help') {
   console.log(`
 Usage:
-  npx github:j-cogburn/d3 init      Install D3 (auto-migrates from old D3 if detected)
-  npx github:j-cogburn/d3 update    Update to latest version — state always preserved
-  npx github:j-cogburn/d3 migrate   Migrate an existing project from old D3 format
-  d3 index                          Rebuild .d3/index.db + index.json; run integrity gate
-  d3 tree [OBJ-NNN]                 Render the objective/directive tree with status rollup
-  d3 run                            Start the continuous runner + live dashboard
-                                      (three tickers; press a number to act on items)
-  d3 run --print                    Render the dashboard once and exit (headless/CI)
-  d3 run --once [--dry-run]         Build every ready+unblocked directive in one pass
-                                      (graph-native successor to npm run orchestrate)
-  d3 learn git [--since=90d]        Git-forensics report: DORA proxies, hotspots, coupling
+  npx github:j-cogburn/d3 init               Install D3 into the current project
+  npx github:j-cogburn/d3 update             Update to latest (self-bootstraps if installed)
 
-State guarantee: update NEVER modifies TASKS.md, CHANGELOG.md, vision.md,
-  memory.md, track.md, CLAUDE.md, docs/, or reports/. Only system files
-  (commands, hooks, scripts, skills, WORKFLOW.md) are replaced.
+  — Plan ——————————————————————————————————————————
+  d3 define <problem>                        Define a new objective (conversational)
+  d3 shape  <OBJ-NNN>                        Shape an objective into directives
+  d3 status                                  Project health snapshot
+
+  — Build ——————————————————————————————————————————
+  d3 build [DIR-NNN] [--dry-run]             Execute ready directives
+  d3 prove [DIR-NNN]                         Adversarial review of built work
+
+  — Learn ——————————————————————————————————————————
+  d3 learn [git] [--since=90d]               Git forensics (DORA, hotspots, coupling)
+                                             or general LEARN (no arg)
+
+  — Inspect ————————————————————————————————————————
+  d3 tree  [OBJ-NNN]                         Objective/directive tree with status rollup
+  d3 index                                   Rebuild index + run integrity gate
+  d3 monitor                                 Live read-only dashboard
+
+State guarantee: update never touches TASKS.md, CHANGELOG.md, vision.md,
+  memory.md, track.md, CLAUDE.md, docs/, or reports/.
 `);
 } else if (COMMANDS[COMMAND]) {
   COMMANDS[COMMAND]();

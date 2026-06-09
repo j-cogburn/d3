@@ -289,8 +289,12 @@ function renderBoard(board, opts = {}) {
 
   // ── footer ──────────────────────────────────────────────────────────────────
   if (opts.interactive !== false) {
-    const pause = board.paused ? 'resume' : 'pause';
-    L.push(chalk.dim(`   a  autonomy · p  ${pause} · r  refresh · q  quit`));
+    if (opts.monitorMode) {
+      L.push(chalk.dim('   r  refresh · q  quit'));
+    } else {
+      const pause = board.paused ? 'resume' : 'pause';
+      L.push(chalk.dim(`   a  autonomy · p  ${pause} · r  refresh · q  quit`));
+    }
   }
 
   return L.join('\n');
