@@ -417,6 +417,7 @@ async function startDaemon(projectDir, opts = {}) {
   let stopping = false;
   const shutdown = (signal) => {
     if (stopping) return; stopping = true;
+    if (process.stdout.isTTY) process.stdout.write('\x1b[?25h'); // show cursor
     process.stdout.write('\n');
     console.log(`\nShutting down (${signal})… releasing lock, leaving in-flight PRs intact.`);
     runner.releaseLock(d3Dir);
@@ -472,6 +473,7 @@ async function startDaemon(projectDir, opts = {}) {
     });
   }
 
+  if (process.stdout.isTTY) process.stdout.write('\x1b[?25l'); // hide cursor for clean TUI
   draw(projectDir, state);
 
   // ── the three tickers ──────────────────────────────────────────────────────────

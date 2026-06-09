@@ -12,6 +12,14 @@ const fs = require('fs');
 const path = require('path');
 const { isDone, isReady, isInProgress, selectBuildable } = require('./select');
 
+// chalk v4 (CJS) — auto-disables in non-TTY/NO_COLOR environments
+let chalk;
+try { chalk = require('chalk'); } catch { chalk = new Proxy({}, { get: () => (s) => s }); }
+
+// Strip ANSI codes to get visible character length (for column alignment)
+function visLen(s) { return s.replace(/\x1b\[[0-9;]*m/g, '').length; }
+function rpad(s, w) { return s + ' '.repeat(Math.max(0, w - visLen(s))); }
+
 // ── config ────────────────────────────────────────────────────────────────────
 const DEFAULTS = {
   concurrency: 4,
@@ -184,49 +192,107 @@ function actionForIndex(board, index) {
   return { item, command: item.command };
 }
 
-// ── rendering (pure: model → string, the §6 dashboard) ───────────────────────────
+// ── rendering ───────────────────────────────────────────────────────────────────
 function fmtUptime(ms) {
   const s = Math.floor(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60);
   return h ? `${h}h${String(m % 60).padStart(2, '0')}m` : `${m}m${String(s % 60).padStart(2, '0')}s`;
 }
 
 function renderBoard(board, opts = {}) {
-  const sel = opts.selectedIndex ?? -1;
-  const L = [];
-  const dot = board.healthy ? '● healthy' : `✗ ${board.integrityErrors} integrity error(s)`;
-  const paused = board.paused ? ' · PAUSED' : '';
-  L.push(`D3 RUNNER · ${board.autonomy}${paused} · uptime ${fmtUptime(board.uptimeMs)} · ${dot}`);
-  L.push('═'.repeat(74));
+  const sel     = opts.selectedIndex ?? -1;
+  const w       = opts.width || (process.stdout && process.stdout.columns) || 80;
+  const hr      = chalk.dim('─'.repeat(w));
+  const hr2     = chalk.dim('═'.repeat(w));
+  const L       = [];
+
+  // ── header ──────────────────────────────────────────────────────────────────
+  const dot     = board.healthy
+    ? chalk.green.bold('● healthy')
+    : chalk.red.bold(`✗ ${board.integrityErrors} error(s)`);
+  const paused  = board.paused ? chalk.yellow.bold('  PAUSED') : '';
+  const meta    = `${dot}${paused}   ${chalk.dim(fmtUptime(board.uptimeMs))}   ${chalk.dim(board.autonomy)}`;
+  const title   = chalk.bold('D3 RUNNER');
+  L.push(rpad(title, w - visLen(meta)) + meta);
+  L.push(hr2);
   L.push('');
-  L.push('STATUS');
-  L.push(`  building  ${board.building.length}` + (board.building.length ? '   ' + board.building.map((d) => d.id).join(', ') : ''));
-  L.push(`  done      ${board.merged.length}` + (board.merged.length ? '   ' + board.merged.slice(-6).map((d) => d.id).join(', ') : ''));
-  L.push(`  review ⚠  ${board.parked.length}` + (board.parked.length ? '   ' + board.parked.map((d) => d.id).join(', ') : ''));
+
+  // ── status ──────────────────────────────────────────────────────────────────
+  const bIds = board.building.map(d => d.id).join(' · ');
+  const dIds = board.merged.slice(-6).map(d => d.id).join(' · ') +
+    (board.merged.length > 6 ? ` +${board.merged.length - 6} more` : '');
+  const rIds = board.parked.map(d => d.id).join(' · ');
+
+  L.push(
+    board.building.length
+      ? `   ${chalk.cyan('↻')}  ${chalk.cyan.bold(String(board.building.length).padStart(2))}  building   ${chalk.dim(bIds)}`
+      : `   ${chalk.dim('↻')}  ${chalk.dim(' 0  building')}`
+  );
+  L.push(
+    board.merged.length
+      ? `   ${chalk.green('✓')}  ${chalk.green.bold(String(board.merged.length).padStart(2))}  done       ${chalk.dim(dIds)}`
+      : `   ${chalk.dim('✓')}  ${chalk.dim(' 0  done')}`
+  );
+  L.push(
+    board.parked.length
+      ? `   ${chalk.yellow('⚠')}  ${chalk.yellow.bold(String(board.parked.length).padStart(2))}  review     ${chalk.dim(rIds)}`
+      : `   ${chalk.dim('⚠')}  ${chalk.dim(' 0  review')}`
+  );
+
+  // ── queue (compact — only non-zero fields) ───────────────────────────────────
+  const q = board.queue;
+  const qParts = [];
+  if (q.ready.length)   qParts.push(`${chalk.bold(q.ready.length)} ready`);
+  if (q.blocked.length) qParts.push(`${chalk.yellow.bold(q.blocked.length)} blocked`);
+  if (q.gated.length)   qParts.push(`${chalk.dim(q.gated.length + ' gated')}`);
+  if (qParts.length || !board.needsYou.length) {
+    L.push('');
+    L.push('   ' + chalk.bold('QUEUE') + '   ' + (qParts.length ? qParts.join(chalk.dim('  ·  ')) : chalk.dim('empty')));
+    if (q.blocked.length) {
+      for (const d of q.blocked) L.push(`         ${chalk.dim(d.id + ' ← ' + d.reason.replace('blocked_by ', ''))}`);
+    }
+    if (q.gated.length) {
+      for (const d of q.gated) L.push(`         ${chalk.dim(d.id + ' ← needs sign-off on ' + d.reason.replace('gated_by ', ''))}`);
+    }
+  }
+
   L.push('');
-  if (board.needsYou.length) {
-    L.push('ACTION NEEDED');
-    board.needsYou.forEach((it, i) => {
-      const cursor = (sel === i) ? '▶' : ' ';
-      L.push(`  ${cursor} ${it.label}   → ${it.command}`);
-    });
+  L.push(hr);
+  L.push('');
+
+  // ── action needed ────────────────────────────────────────────────────────────
+  const navHint = opts.interactive !== false ? chalk.dim('  ↑↓ move · ↵ run') : '';
+  L.push('   ' + chalk.bold('ACTION NEEDED') + navHint);
+  L.push('');
+  if (!board.needsYou.length) {
+    L.push(chalk.dim('   nothing — you are clear'));
   } else {
-    L.push('ACTION NEEDED');
-    L.push('  (nothing — you are clear)');
+    board.needsYou.forEach((it, i) => {
+      const active = sel === i;
+      const cursor = active ? chalk.cyan.bold('▶') : ' ';
+      const label  = active ? chalk.bold(it.label) : it.label;
+      const cmd    = chalk.dim(it.command);
+      // right-align the command
+      const plainW = 5 + it.label.length + 4 + it.command.length;
+      const gap    = Math.max(2, w - plainW);
+      L.push(`   ${cursor}  ${label}${' '.repeat(gap)}${cmd}`);
+    });
   }
+
   L.push('');
-  L.push('QUEUE');
-  L.push(`  ready    ${board.queue.ready.length}` + (board.queue.ready.length ? '   ' + board.queue.ready.map((d) => d.id).join(', ') : ''));
-  L.push(`  blocked  ${board.queue.blocked.length}` + (board.queue.blocked.length ? '   ' + board.queue.blocked.map((d) => `${d.id}⟵${d.reason.replace('blocked_by ', '')}`).join(' · ') : ''));
-  L.push(`  gated    ${board.queue.gated.length}` + (board.queue.gated.length ? '   ' + board.queue.gated.map((d) => `${d.id}⟵${d.reason.replace('gated_by ', '')}`).join(' · ') : ''));
+  L.push(hr);
   L.push('');
-  L.push('GIT MONITOR');
-  L.push('  ' + (board.outer || 'watching for new commits…'));
+
+  // ── git ──────────────────────────────────────────────────────────────────────
+  L.push('   ' + chalk.bold('GIT') + '   ' + chalk.dim(board.outer || 'watching for new commits…'));
   L.push('');
-  L.push(`Autonomy: ${board.autonomy}   (press a to cycle)`);
-  L.push('═'.repeat(74));
+  L.push(hr2);
+
+  // ── footer ──────────────────────────────────────────────────────────────────
   if (opts.interactive !== false) {
-    L.push(' [↑↓] select   [↵] run   [a] autonomy   [p] ' + (board.paused ? 'resume' : 'pause') + '   [r] refresh   [q] quit');
+    const pause = board.paused ? 'resume' : 'pause';
+    L.push(chalk.dim(`   a  autonomy · p  ${pause} · r  refresh · q  quit`));
   }
+
   return L.join('\n');
 }
 

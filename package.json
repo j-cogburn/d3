@@ -1,7 +1,7 @@
 {
   "name": "d3-workflow",
-  "version": "2.1.0",
-  "description": "Directive-Driven Development \u2014 a Claude Code workflow system",
+  "version": "2.2.0",
+  "description": "Directive-Driven Development — a Claude Code workflow system",
   "bin": {
     "d3": "./bin/d3.js"
   },
@@ -36,5 +36,8 @@
     "agents",
     "directive-driven-development"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.2"
+  }
 }
