@@ -33,6 +33,11 @@ const { buildIndex } = require('./d3-index');
 const { isDone, isReady, branchFor, selectBuildable } = require('./lib/select');
 const runner = require('./lib/runner');
 
+// Arrow key escape sequences in raw mode
+const KEY_UP    = '\x1b[A';
+const KEY_DOWN  = '\x1b[B';
+const KEY_ENTER = '\r';
+
 // ── config ──────────────────────────────────────────────────────────────────
 const MAX_CONCURRENT = parseInt(process.env.D3_CONCURRENCY || '4', 10);
 const TIMEOUT_MS     = parseInt(process.env.D3_TIMEOUT_MS || String(15 * 60 * 1000), 10);
@@ -391,6 +396,7 @@ async function startDaemon(projectDir, opts = {}) {
     outer: null,
     lastGitHead: gitHead(projectDir),
     nextMiddleAt: 0,
+    selectedIndex: 0,
   };
 
   // ── --print: render the dashboard once and exit (headless / CI / piping) ──────
@@ -430,6 +436,31 @@ async function startDaemon(projectDir, opts = {}) {
       if (key === 'p') { state.paused = !state.paused; draw(projectDir, state); return; }
       if (key === 'r') { draw(projectDir, state); return; }
       if (key === 'a') { cycleAutonomy(d3Dir, state); draw(projectDir, state); return; }
+
+      // Arrow key navigation
+      if (key === KEY_UP) {
+        state.selectedIndex = Math.max(0, state.selectedIndex - 1);
+        draw(projectDir, state); return;
+      }
+      if (key === KEY_DOWN) {
+        state.selectedIndex = Math.min(Math.max(0, board.needsYou.length - 1), state.selectedIndex + 1);
+        draw(projectDir, state); return;
+      }
+
+      // Enter — run the currently selected action
+      if (key === KEY_ENTER) {
+        const action = runner.actionForIndex(board, state.selectedIndex);
+        if (action) {
+          if (toolsPresent(projectDir)) { state.outer = `cannot run ${action.command}: claude not in PATH`; draw(projectDir, state); return; }
+          console.log(`\n▸ running ${action.command} …`);
+          spawnSync('claude', ['-p', action.command, '--dangerously-skip-permissions'],
+            { cwd: projectDir, stdio: 'inherit', env: { ...process.env } });
+          draw(projectDir, state);
+        }
+        return;
+      }
+
+      // Number key fallback
       const action = runner.actionForKey(board, key);
       if (action) {
         if (toolsPresent(projectDir)) { state.outer = `cannot run ${action.command}: claude not in PATH`; draw(projectDir, state); return; }
@@ -494,7 +525,8 @@ function cycleAutonomy(d3Dir, state) {
 function draw(projectDir, state) {
   const { board } = snapshot(projectDir, state);
   if (process.stdout.isTTY) process.stdout.write('\x1b[2J\x1b[H'); // clear + home
-  process.stdout.write(runner.renderBoard(board, { interactive: !!process.stdin.isTTY }) + '\n');
+  const selectedIndex = board.needsYou.length ? (state.selectedIndex ?? 0) : -1;
+  process.stdout.write(runner.renderBoard(board, { interactive: !!process.stdin.isTTY, selectedIndex }) + '\n');
 }
 
 // ── main ────────────────────────────────────────────────────────────────────

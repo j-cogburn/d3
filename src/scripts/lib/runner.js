@@ -169,13 +169,18 @@ function reasonFor(d) {
   return /^ci-failed/i.test(d.status) ? 'CI failed' : 'critical finding';
 }
 
-// ── key → action mapping (fool-proof selection: press a number, never recall) ────
-// The dashboard numbers the NEEDS YOU items; this maps a pressed key to the exact
-// slash command to run. Pure, so the mapping is testable without a terminal.
+// ── key → action mapping ────────────────────────────────────────────────────────
+// Maps a pressed number key OR a 0-based selectedIndex to the exact slash command.
 function actionForKey(board, key) {
   const n = parseInt(key, 10);
   if (!Number.isInteger(n) || n < 1 || n > board.needsYou.length) return null;
   const item = board.needsYou[n - 1];
+  return { item, command: item.command };
+}
+
+function actionForIndex(board, index) {
+  if (index < 0 || index >= board.needsYou.length) return null;
+  const item = board.needsYou[index];
   return { item, command: item.command };
 }
 
@@ -186,33 +191,41 @@ function fmtUptime(ms) {
 }
 
 function renderBoard(board, opts = {}) {
+  const sel = opts.selectedIndex ?? -1;
   const L = [];
   const dot = board.healthy ? '● healthy' : `✗ ${board.integrityErrors} integrity error(s)`;
   const paused = board.paused ? ' · PAUSED' : '';
   L.push(`D3 RUNNER · ${board.autonomy}${paused} · uptime ${fmtUptime(board.uptimeMs)} · ${dot}`);
   L.push('═'.repeat(74));
   L.push('');
-  L.push('INNER LOOP  (autonomous)');
+  L.push('STATUS');
   L.push(`  building  ${board.building.length}` + (board.building.length ? '   ' + board.building.map((d) => d.id).join(', ') : ''));
-  L.push(`  merged ▲  ${board.merged.length}` + (board.merged.length ? '   ' + board.merged.slice(-6).map((d) => d.id).join(', ') : ''));
-  L.push(`  parked ⚠  ${board.parked.length}` + (board.parked.length ? '   ' + board.parked.map((d) => d.id).join(', ') : ''));
+  L.push(`  done      ${board.merged.length}` + (board.merged.length ? '   ' + board.merged.slice(-6).map((d) => d.id).join(', ') : ''));
+  L.push(`  review ⚠  ${board.parked.length}` + (board.parked.length ? '   ' + board.parked.map((d) => d.id).join(', ') : ''));
   L.push('');
-  L.push('NEEDS YOU            ← press the number to act (the runner runs the command)');
-  if (!board.needsYou.length) L.push('  (nothing — you are clear)');
-  board.needsYou.forEach((it, i) => L.push(`  [${i + 1}] ${it.label}   → ${it.command}`));
+  if (board.needsYou.length) {
+    L.push('ACTION NEEDED');
+    board.needsYou.forEach((it, i) => {
+      const cursor = (sel === i) ? '▶' : ' ';
+      L.push(`  ${cursor} ${it.label}   → ${it.command}`);
+    });
+  } else {
+    L.push('ACTION NEEDED');
+    L.push('  (nothing — you are clear)');
+  }
   L.push('');
   L.push('QUEUE');
-  L.push(`  ready    ${board.queue.ready.length}` + (board.queue.ready.length ? '   ' + board.queue.ready.map((d) => d.id).join(', ') : '   (all claimed)'));
+  L.push(`  ready    ${board.queue.ready.length}` + (board.queue.ready.length ? '   ' + board.queue.ready.map((d) => d.id).join(', ') : ''));
   L.push(`  blocked  ${board.queue.blocked.length}` + (board.queue.blocked.length ? '   ' + board.queue.blocked.map((d) => `${d.id}⟵${d.reason.replace('blocked_by ', '')}`).join(' · ') : ''));
   L.push(`  gated    ${board.queue.gated.length}` + (board.queue.gated.length ? '   ' + board.queue.gated.map((d) => `${d.id}⟵${d.reason.replace('gated_by ', '')}`).join(' · ') : ''));
   L.push('');
-  L.push('OUTER LOOP  (advisory)');
-  L.push('  ' + (board.outer || 'no git-forensics run yet this session'));
+  L.push('GIT MONITOR');
+  L.push('  ' + (board.outer || 'watching for new commits…'));
   L.push('');
-  L.push(`Autonomy: ${board.autonomy} ▸   (press a to change · trade-offs shown first)`);
+  L.push(`Autonomy: ${board.autonomy}   (press a to cycle)`);
   L.push('═'.repeat(74));
   if (opts.interactive !== false) {
-    L.push(' [1-9] act   [a] autonomy   [p] ' + (board.paused ? 'resume' : 'pause') + '   [r] refresh   [q] quit');
+    L.push(' [↑↓] select   [↵] run   [a] autonomy   [p] ' + (board.paused ? 'resume' : 'pause') + '   [r] refresh   [q] quit');
   }
   return L.join('\n');
 }
@@ -221,5 +234,5 @@ module.exports = {
   DEFAULTS, loadConfig, saveConfigKey, nextBackoff,
   lockPath, isAlive, readLock, acquireLock, releaseLock,
   objectivesAwaitingVerdict, objectivesNeedingShape,
-  computeBoard, actionForKey, renderBoard,
+  computeBoard, actionForKey, actionForIndex, renderBoard,
 };

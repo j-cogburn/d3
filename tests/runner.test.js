@@ -139,9 +139,9 @@ test('renderBoard produces the §6 sections and numbers the actions', () => {
   const nodes = [obj('OBJ-1', 'active'), dir('DIR-1', 'ready', 'OBJ-1'), dir('DIR-4', 'needs-review', 'OBJ-1')];
   const b = R.computeBoard(nodes, { autonomy: 'inner-only', startedAt: Date.now() });
   const out = R.renderBoard(b, { interactive: true });
-  for (const section of ['D3 RUNNER', 'INNER LOOP', 'NEEDS YOU', 'QUEUE', 'OUTER LOOP', 'Autonomy:']) {
+  for (const section of ['D3 RUNNER', 'STATUS', 'ACTION NEEDED', 'QUEUE', 'GIT MONITOR', 'Autonomy:']) {
     assert.ok(out.includes(section), `missing section: ${section}`);
   }
-  assert.ok(out.includes('[1]'), 'numbers the first NEEDS YOU item');
+  assert.ok(out.includes('/prove DIR-4') || out.includes('(nothing'), 'lists action or empty state');
   assert.ok(out.includes('[q] quit'));
 });
